@@ -1,0 +1,59 @@
+---
+---
+
+@mixin font-face($family, $style, $weight, $type) {
+	@font-face {
+		font-family: $family;
+		font-style: $style;
+		font-weight: $weight;
+		font-display: swap;
+		src: url('../fonts/' + $family + '/' + $family + '-' + $type + '.woff')
+			format('woff');
+	}
+}
+
+@include font-face('Inter', normal, 100, 'Thin');
+@include font-face('Inter', normal, 200, 'ExtraLight');
+@include font-face('Inter', normal, 300, 'Light');
+@include font-face('Inter', normal, 400, 'Regular');
+@include font-face('Inter', normal, 500, 'Medium');
+@include font-face('Inter', normal, 600, 'SemiBold');
+@include font-face('Inter', normal, 700, 'Bold');
+@include font-face('Inter', normal, 800, 'ExtraBold');
+@include font-face('Inter', normal, 900, 'Black');
+
+@include font-face('Inter', italic, 100, 'ThinItalic');
+@include font-face('Inter', italic, 200, 'ExtraLightItalic');
+@include font-face('Inter', italic, 300, 'LightItalic');
+@include font-face('Inter', italic, 400, 'RegularItalic');
+@include font-face('Inter', italic, 500, 'MediumItalic');
+@include font-face('Inter', italic, 600, 'SemiBoldItalic');
+@include font-face('Inter', italic, 700, 'BoldItalic');
+@include font-face('Inter', italic, 800, 'ExtraBoldItalic');
+@include font-face('Inter', italic, 900, 'BlackItalic');
+
+@include font-face('Metropolis', normal, 100, 'Thin');
+@include font-face('Metropolis', normal, 200, 'ExtraLight');
+@include font-face('Metropolis', normal, 300, 'Light');
+@include font-face('Metropolis', normal, 400, 'Regular');
+@include font-face('Metropolis', normal, 500, 'Medium');
+@include font-face('Metropolis', normal, 600, 'SemiBold');
+@include font-face('Metropolis', normal, 700, 'Bold');
+@include font-face('Metropolis', normal, 800, 'ExtraBold');
+@include font-face('Metropolis', normal, 900, 'Black');
+
+@include font-face('Metropolis', italic, 100, 'ThinItalic');
+@include font-face('Metropolis', italic, 200, 'ExtraLightItalic');
+@include font-face('Metropolis', italic, 300, 'LightItalic');
+@include font-face('Metropolis', italic, 400, 'RegularItalic');
+@include font-face('Metropolis', italic, 500, 'MediumItalic');
+@include font-face('Metropolis', italic, 600, 'SemiBoldItalic');
+@include font-face('Metropolis', italic, 700, 'BoldItalic');
+@include font-face('Metropolis', italic, 800, 'ExtraBoldItalic');
+@include font-face('Metropolis', italic, 900, 'BlackItalic');
+
+@include font-face('FiraCode', monospace, 300, 'Light');
+@include font-face('FiraCode', monospace, 400, 'Regular');
+@include font-face('FiraCode', monospace, 500, 'Medium');
+@include font-face('FiraCode', monospace, 600, 'SemiBold');
+@include font-face('FiraCode', monospace, 700, 'Bold');
