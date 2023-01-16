@@ -1,0 +1,1 @@
+exclude: ['Gemfile', 'Gemfile.lock', 'docker-compose.yml']
