@@ -1,7 +1,7 @@
 ---
 ---
 
-$light: #efd;
+$light: #ffe;
 $dark: #322;
 
 $screen-sm: 600px;
@@ -47,8 +47,17 @@ nav {
 }
 
 header {
-    padding: 4rem 0;
+    padding: 4rem 0 2rem;
     text-align: center;
+    background-image: url("../bg/pieces.svg");
+    @media (prefers-color-scheme: dark) {
+        background-image: url("../bg/pieces-dark.svg");
+    }
+    background-position: center;
+    background-size: auto;
+    background-repeat: no-repeat;
+    background-blend-mode: overlay;
+    border-bottom: 1px solid;
 }
 
 main {
@@ -63,7 +72,6 @@ main {
 
 footer {
     padding: 2rem;
-    border-color: inherit;
     border-top: 1px solid;
     text-align: center;
     font-size: small;
