@@ -1,8 +1,72 @@
 ---
 ---
 
+$light: #efd;
+$dark: #322;
+
+$screen-sm: 600px;
+$screem-md: 900px;
+
+.remix {
+    width: 24px;
+    height: 24px;
+    fill: #555;
+}
+
 html {
-	font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: "Inter", "", system-ui, -apple-system, sans-serif;
+    font-size: 16pt;
+    background-color: $light;
+    color: $dark;
+    @media (prefers-color-scheme: dark) {
+        background-color: $dark;
+        color: $light;
+    }
+}
+
+nav {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    backdrop-filter: blur(5px);
+    a {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        text-decoration: none;
+        @media (max-width: $screen-sm) {
+            flex-direction: column;
+            gap: 0;
+            padding: 0.5rem 1rem;
+        }
+    }
+}
+
+header {
+    padding: 4rem 0;
+    text-align: center;
+}
+
+main {
+    display: flex;
+    justify-content: center;
+    article {
+        flex: 1;
+        max-width: $screem-md;
+        padding: 1rem;
+    }
+}
+
+footer {
+    padding: 2rem;
+    border-color: inherit;
+    border-top: 1px solid;
+    text-align: center;
+    font-size: small;
 }
 
 h1,
@@ -11,10 +75,24 @@ h3,
 h4,
 h5,
 h6 {
-	font-family: 'Metropolis', sans-serif;
+    font-family: "Metropolis", sans-serif;
+}
+
+a {
+    color: inherit;
+    background-color: inherit;
+    transition: all 0.2s;
+    &:hover {
+        color: $light;
+        background-color: $dark;
+        @media (prefers-color-scheme: dark) {
+            color: $dark;
+            background-color: $light;
+        }
+    }
 }
 
 pre,
 code {
-	font-family: 'FiraCode';
+    font-family: "FiraCode";
 }

@@ -1,17 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-		<title>joc</title>
+    <title>joc</title>
 
-		<link rel="stylesheet" href="./assets/css/sanitize.css" />
-		<link rel="stylesheet" href="./assets/css/fonts.css" />
-		<link rel="stylesheet" href="./assets/css/styles.css" />
-	</head>
-	<body>
-		{{ content }}
-	</body>
+    <link rel="stylesheet" href="./assets/css/sanitize.css" />
+    <link rel="stylesheet" href="./assets/css/fonts.css" />
+    <link rel="stylesheet" href="./assets/css/styles.css" />
+  </head>
+  <body>
+    <nav>
+      {% for i in site.data.menu %}
+      <a href="{{ i.link }}">
+        <svg class="remix">
+          <use
+            xlink:href="./assets/remixicon.symbol.svg#ri-{{ i.icon }}-fill"
+          ></use>
+        </svg>
+        <span>{{ i.name }}</span>
+      </a>
+      {% endfor %}
+    </nav>
+
+    <header></header>
+    <main>
+      <aside></aside>
+      <article>{{ content }}</article>
+    </main>
+    <footer>
+      Last updated: {{ site.time | date: '%Y %B %e' }} <br />
+      Made by <a href="https://github.com/eduvf">EduVF</a>
+    </footer>
+  </body>
 </html>
