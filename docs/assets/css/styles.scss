@@ -15,7 +15,7 @@ $screem-md: 900px;
 
 html {
     font-family: "Inter", "", system-ui, -apple-system, sans-serif;
-    font-size: 16pt;
+    font-size: 14pt;
     background-color: $light;
     color: $dark;
     @media (prefers-color-scheme: dark) {
@@ -26,6 +26,9 @@ html {
 
 nav {
     position: fixed;
+    @media (max-width: $screen-sm) {
+        position: static;
+    }
     width: 100%;
     top: 0;
     display: flex;
@@ -42,6 +45,7 @@ nav {
             flex-direction: column;
             gap: 0;
             padding: 0.5rem 1rem;
+            font-size: smaller;
         }
     }
 }
