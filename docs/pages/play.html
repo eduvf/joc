@@ -32,9 +32,10 @@ header:
 </div>
 
 <div class="toolbar">
+  <button onclick="window.example()">example</button>
   <button onclick="window.empty()">
     <svg class="remix">
-      <use xlink:href="assets/remixicon.symbol.svg#ri-terminal-window-fill"></use>
+      <use xlink:href="assets/remixicon.symbol.svg#ri-close-fill"></use>
     </svg>
   </button>
   <button onclick="window.run()">
@@ -47,19 +48,19 @@ header:
 <pre id="output"></pre>
 
 <script type="module">
-  import { lex, evaluate } from './assets/js/joc.mjs';
+  import { lex, parse, evaluate } from './assets/js/joc.mjs';
 
   const lines = document.getElementById('lines');
   const editor = document.getElementById('editor');
   const output = document.getElementById('output');
 
-  editor.addEventListener('input', () => {
-    // TODO - highlight
+  editor.addEventListener('input', update);
 
-    updateLines();
-  });
+  function update() {
+    // update highlight
+    // TODO
 
-  function updateLines() {
+    // update lines
     lines.innerText = '1';
     let n = 2;
     for (let i = 0; i + 1 < editor.innerText.length; i++) {
@@ -70,8 +71,21 @@ header:
     }
   }
 
+  window.example = () => {
+    editor.innerText =
+      ': w 64 h 32\n' +
+      ': curr <> w h ?? 0 1\n' +
+      ': next ~ c =| (+ <-> -1 0 1 <|> -1 0 1 c) 3 4\n' +
+      'win w h (\n' +
+      '    bg 0\n' +
+      '    @ x y curr ? ^ (pix x y (col 0xfff))\n' +
+      '    . curr (next curr)\n' +
+      '    zzz 1\n' +
+      ')';
+    update();
+  };
   window.run = () => {
-    let result = lex(editor.innerText);
+    let result = parse(lex('(' + editor.innerText + ')'));
     output.innerText += '\n' + evaluate().join('\n') + '\n' + JSON.stringify(result);
   };
   window.empty = () => {
