@@ -8,10 +8,11 @@ header:
 ---
 
 <style>
+  .editor-wrap {
+    display: flex;
+  }
   #editor {
     flex: 1;
-    overflow: scroll;
-    resize: vertical;
     border: 1px solid transparent;
   }
   #editor:focus {
@@ -25,7 +26,10 @@ header:
   }
 </style>
 
-<pre id="editor" contenteditable></pre>
+<div class="editor-wrap">
+  <pre id="lines">1</pre>
+  <pre id="editor" contenteditable></pre>
+</div>
 
 <div class="toolbar">
   <button onclick="window.empty()">
@@ -45,12 +49,26 @@ header:
 <script type="module">
   import { lex, evaluate } from './assets/js/joc.mjs';
 
+  const lines = document.getElementById('lines');
   const editor = document.getElementById('editor');
   const output = document.getElementById('output');
 
   editor.addEventListener('input', () => {
     // TODO - highlight
+
+    updateLines();
   });
+
+  function updateLines() {
+    lines.innerText = '1';
+    let n = 2;
+    for (let i = 0; i + 1 < editor.innerText.length; i++) {
+      if (editor.innerText[i] === '\n') {
+        lines.innerText += '\n' + n;
+        n++;
+      }
+    }
+  }
 
   window.run = () => {
     let result = lex(editor.innerText);
