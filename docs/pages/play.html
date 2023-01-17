@@ -28,14 +28,12 @@ header:
 <pre id="editor" contenteditable></pre>
 
 <div class="toolbar">
-  <button onclick="empty()">
+  <button onclick="window.empty()">
     <svg class="remix">
-      <use
-        xlink:href="assets/remixicon.symbol.svg#ri-terminal-window-fill"
-      ></use>
+      <use xlink:href="assets/remixicon.symbol.svg#ri-terminal-window-fill"></use>
     </svg>
   </button>
-  <button onclick="copy()">
+  <button onclick="window.run()">
     <svg class="remix">
       <use xlink:href="assets/remixicon.symbol.svg#ri-play-fill"></use>
     </svg>
@@ -44,19 +42,22 @@ header:
 
 <pre id="output"></pre>
 
-<script>
-  const editor = document.getElementById("editor");
-  const output = document.getElementById("output");
-  empty();
+<script type="module">
+  import { lex, evaluate } from './assets/js/joc.mjs';
 
-  editor.addEventListener("input", () => {
+  const editor = document.getElementById('editor');
+  const output = document.getElementById('output');
+
+  editor.addEventListener('input', () => {
     // TODO - highlight
   });
 
-  function empty() {
-    output.innerText = "joc 0.0.1";
-  }
-  function copy() {
-    output.innerText += "\n" + editor.innerText;
-  }
+  window.run = () => {
+    let result = lex(editor.innerText);
+    output.innerText += '\n' + evaluate().join('\n') + '\n' + JSON.stringify(result);
+  };
+  window.empty = () => {
+    output.innerText = 'joc 0.0.1';
+  };
+  window.empty();
 </script>
