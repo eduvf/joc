@@ -6,3 +6,57 @@ title: play
 header:
   subtitle: playground
 ---
+
+<style>
+  #editor {
+    flex: 1;
+    overflow: scroll;
+    resize: vertical;
+    border: 1px solid transparent;
+  }
+  #editor:focus {
+    border: 1px solid;
+  }
+  .toolbar {
+    text-align: center;
+  }
+  #output {
+    font-size: small;
+  }
+</style>
+
+<pre id="editor" contenteditable></pre>
+
+<div class="toolbar">
+  <button onclick="empty()">
+    <svg class="remix">
+      <use
+        xlink:href="assets/remixicon.symbol.svg#ri-terminal-window-fill"
+      ></use>
+    </svg>
+  </button>
+  <button onclick="copy()">
+    <svg class="remix">
+      <use xlink:href="assets/remixicon.symbol.svg#ri-play-fill"></use>
+    </svg>
+  </button>
+</div>
+
+<pre id="output"></pre>
+
+<script>
+  const editor = document.getElementById("editor");
+  const output = document.getElementById("output");
+  empty();
+
+  editor.addEventListener("input", () => {
+    // TODO - highlight
+  });
+
+  function empty() {
+    output.innerText = "joc 0.0.1";
+  }
+  function copy() {
+    output.innerText += "\n" + editor.innerText;
+  }
+</script>

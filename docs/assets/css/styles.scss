@@ -1,10 +1,6 @@
 ---
 ---
 
-$light: #ffe;
-$dark: #322;
-$darker: #211;
-
 $screen-sm: 600px;
 $screem-md: 900px;
 
@@ -14,6 +10,17 @@ $screem-md: 900px;
     fill: #555;
 }
 
+:root {
+    --fg: #322;
+    --mg: #eec;
+    --bg: #ffe;
+    @media (prefers-color-scheme: dark) {
+        --fg: #ffe;
+        --mg: #211;
+        --bg: #322;
+    }
+}
+
 :target {
     scroll-margin-top: 4rem;
 }
@@ -21,13 +28,19 @@ $screem-md: 900px;
 html {
     font-family: "Inter", "", system-ui, -apple-system, sans-serif;
     font-size: 14pt;
-    background-color: $light;
-    color: $dark;
-    @media (prefers-color-scheme: dark) {
-        background-color: $dark;
-        color: $light;
-    }
+    background-color: var(--bg);
+    color: var(--fg);
     scroll-behavior: smooth;
+}
+
+a,
+button {
+    transition: all 0.2s;
+    color: var(--fg);
+    &:hover {
+        color: var(--bg);
+        background-color: var(--fg);
+    }
 }
 
 nav {
@@ -118,27 +131,20 @@ h6 {
     font-family: "Metropolis", sans-serif;
 }
 
-a {
-    color: inherit;
-    background-color: inherit;
-    transition: all 0.2s;
-    &:hover {
-        color: $light;
-        background-color: $dark;
-        @media (prefers-color-scheme: dark) {
-            color: $dark;
-            background-color: $light;
-        }
-    }
-}
-
 pre,
 code {
-    background-color: $darker;
+    background-color: var(--mg);
     font-family: "FiraCode";
 }
 pre {
     padding: 1rem;
     max-width: calc(100vw - 2rem);
     overflow: scroll;
+}
+
+button {
+    border: none;
+    padding: 1rem 2rem;
+    font-size: inherit;
+    background-color: var(--mg);
 }
