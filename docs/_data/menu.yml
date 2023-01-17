@@ -11,5 +11,5 @@
   link: docs.html
 
 - name: play
-  icon: terminal-box
+  icon: flask
   link: play.html
