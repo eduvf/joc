@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <link rel="shortcut icon" href="./assets/favicon.ico" type="image/x-icon" />
-    <title>joc programming language</title>
+    <title>joc {{ page.title }}</title>
 
     <link rel="stylesheet" href="./assets/css/sanitize.css" />
     <link rel="stylesheet" href="./assets/css/fonts.css" />
@@ -27,11 +27,14 @@
     </nav>
 
     <header>
-      <h1>joc</h1>
-      <h2>programming language</h2>
+      <h1>{{ page.header.title }}</h1>
+      <h2>{{ page.header.subtitle }}</h2>
+      <p>{{ page.header.desc }}</p>
     </header>
     <main>
-      <aside></aside>
+      {% if page.toc %}
+      <aside>{% include toc.html html=content %}</aside>
+      {% endif %}
       <article>{{ content }}</article>
     </main>
     <footer>
