@@ -1,15 +1,15 @@
 - name: home
   icon: home
-  link: ./
+  link: index.html
 
 - name: learn
   icon: quill-pen
-  link: ./404.html
+  link: learn.html
 
 - name: docs
   icon: book-2
-  link: ./404.html
+  link: docs.html
 
 - name: play
   icon: terminal-box
-  link: ./404.html
+  link: play.html
