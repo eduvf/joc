@@ -72,6 +72,7 @@ export function lex(s) {
             for (i++; i < s.length && /[!-~]/.test(s[i]) && /[^'(),\[\]{}]/.test(s[i]); i++);
             let t = s.slice(from, i);
             // check if number (int, float, ratio) or key
+            /*
             if (/^(-?|0[xb])\d+$/.test(t)) {
                 // integer (including hex or binary)
                 tok.push({ type: 'integer', value: Number(t), line: line });
@@ -82,7 +83,12 @@ export function lex(s) {
                 // ratio
                 let ratio = t.split(':').map((e) => Number(e));
                 tok.push({ type: 'ratio', value: ratio, line: line });
+            */
+            if (/^(-|0x|0b)?\d*\.?\d+$/.test(t)) {
+                // number
+                tok.push({ type: 'number', value: Number(t), line: line });
             } else {
+                // key
                 tok.push({ type: 'key', value: t, line: line });
             }
         } else if (/\s/.test(char)) {
