@@ -8,11 +8,12 @@
  * - lex(s)
  * - parse(tok)
  * - evaluate(node, env)
+ * - show(r)
  *
  * lex() return a list of tokens, and parse() constructs an AST.
  * Then, evaluate() executes the code provided an environment to
- * work with. It'll return the array 'msg' with all relevant
- * print messages, as well as warnings and errors (if any).
+ * work with, and returns the result. show() formats the result
+ * as a string, along with the messages stored in 'msg'.
  */
 
 //--------------------------------------------------------------
@@ -58,34 +59,31 @@ export function lex(s) {
                 }
                 if (s[i] === '\n') line++;
             }
-            tok.push({ type: 's', val: s.slice(from, i), line: line });
+            tok.push({ type: 'string', value: s.slice(from, i), line: line });
             i++; // ignore ending quote
         } else if (/[a-z^_]/.test(char)) {
-            // word keyword
+            // word
             let from = i;
             for (i++; i < s.length && /[\w^!?~+]/.test(s[i]); i++);
-            tok.push({ type: 'w', val: s.slice(from, i), line: line });
+            tok.push({ type: 'word', value: s.slice(from, i), line: line });
         } else if (/[!-~]/.test(char)) {
-            // number or symbol keyword
+            // number or key
             let from = i;
             for (i++; i < s.length && /[!-~]/.test(s[i]) && /[^'(),\[\]{}]/.test(s[i]); i++);
             let t = s.slice(from, i);
-            // check if number (int, float, ratio) or keyword
-            if (/^-?\d+$/.test(t)) {
-                // integer
-                tok.push({ type: 'i', val: Number(t), line: line });
-            } else if (/^0[xb]\d+$/.test(t)) {
-                // hex or binary (same as integer)
-                tok.push({ type: 'i', val: Number(t), line: line });
+            // check if number (int, float, ratio) or key
+            if (/^(-?|0[xb])\d+$/.test(t)) {
+                // integer (including hex or binary)
+                tok.push({ type: 'integer', value: Number(t), line: line });
             } else if (/^-?(\d*\.\d+)|(\d+\.\d*)$/.test(t)) {
                 // float
-                tok.push({ type: 'f', val: Number(t), line: line });
+                tok.push({ type: 'float', value: Number(t), line: line });
             } else if (/^-?\d+:-?\d+$/.test(t)) {
                 // ratio
                 let ratio = t.split(':').map((e) => Number(e));
-                tok.push({ type: 'r', val: ratio, line: line });
+                tok.push({ type: 'ratio', value: ratio, line: line });
             } else {
-                tok.push({ type: 'k', val: t, line: line });
+                tok.push({ type: 'key', value: t, line: line });
             }
         } else if (/\s/.test(char)) {
             // ignore whitespace
@@ -99,21 +97,23 @@ export function lex(s) {
 }
 
 /**
- * Take a list of tokens and return an AST
+ * Takes a list of tokens and return an AST
  * @param {Array.<object>} tok
+ * @param {boolean} head
+ * @returns {Object}
  */
 export function parse(tok, head = true) {
     while (tok.length > 0) {
         let t = tok.shift();
         // an expression can start with...
-        if (t.type === 'k' || (head && t.type === 'w')) {
-            // - a symbol keyword (k)
-            // - a word keyword (w), given that head == true
+        if (t.type === 'key' || (head && t.type === 'word')) {
+            // - a key
+            // - a word, given that head == true
             let expr = [t];
             while (tok.length > 0 && !'\n)'.includes(tok[0].type)) {
                 expr.push(parse(tok, false));
             }
-            return expr;
+            return { type: 'expression', value: expr, line: t.line };
         } else if (t.type === '(') {
             // - a parenthesis (...)
             let expr = [];
@@ -129,17 +129,62 @@ export function parse(tok, head = true) {
             } else {
                 tok.shift(); // remove ')'
             }
-            return expr;
+            return { type: isMulti ? 'scope' : 'expression', value: expr, line: t.line };
         } else if (t.type === '\n') {
             continue; // ignore extra new lines
         }
         return t;
     }
-    return [];
+    return { type: 'nothing' };
 }
 
+/**
+ * Interpret an AST and return the resulting value
+ * @param {Object} node
+ * @param {Array.<object>} env
+ * @returns {Object}
+ */
 export function evaluate(node, env) {
-    let result = msg.slice(0);
-    msg.length = 0;
-    return result;
+    switch (node.type) {
+        case 'scope':
+        case 'expression':
+            let scope = node.type === 'scope';
+            if (!scope && node.value.length > 0) {
+                // if is an expression, check if the first element is a function
+                let func = evaluate(node.value[0], env);
+                if (func.type === 'function') {
+                    return func.value(node.value.slice(1), env, node.line, msg);
+                }
+            }
+            // otherwise, process each element and return the last one
+            let result = { type: 'nothing' };
+            if (scope) env.push({}); // start scope
+            for (let e of node.value) {
+                result = evaluate(e, env);
+            }
+            if (scope) env.pop(); //end scope
+            return result;
+        case 'key':
+        case 'word':
+            // search of the reference from inner to outer scope
+            for (let i = env.length - 1; i >= 0; i--) {
+                if (node.value in env[i]) return env[i][node.value];
+            }
+            msg.push(`[*] Couldn't find '${node.value}', returning nothing instead.`);
+            return { type: 'nothing' };
+        default:
+            // is a literal value
+            return node;
+    }
+}
+
+/**
+ * Takes a result from evaluate() and returns a string with
+ * messages to the user and the result.
+ * @param {Object} r
+ * @returns {String}
+ */
+export function show(r) {
+    msg.push(`(${r.type}) ${r.value}`);
+    return msg.splice(0, Infinity).join('\n');
 }
