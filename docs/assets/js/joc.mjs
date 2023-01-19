@@ -6,7 +6,7 @@
  *
  * This module is structured as follows:
  * - lex(s, log)
- * - parse(tok, log, head)
+ * - parse(tok, head, log)
  * - evaluate(node, env, log)
  * - joc(s, env, log)
  *
@@ -93,7 +93,7 @@ export function lex(s, log) {
  * @param {boolean} head
  * @returns {Object}
  */
-export function parse(tok, log, head = true) {
+export function parse(tok, head, log) {
     while (tok.length > 0) {
         let t = tok.shift();
         // ignore extra new lines
@@ -104,7 +104,7 @@ export function parse(tok, log, head = true) {
             // - a word, given that head == true
             let expr = [t];
             while (tok.length > 0 && !'\n)]}'.includes(tok[0].type)) {
-                expr.push(parse(tok, log, false));
+                expr.push(parse(tok, false, log));
             }
             return { type: 'expression', value: expr, scope: false, line: t.line };
         } else if (t.type === '(' || t.type === '[' || t.type === '{') {
@@ -117,7 +117,7 @@ export function parse(tok, log, head = true) {
             let type = t.type === '(' ? 'expression' : t.type === '[' ? 'table' : 'map';
             let end = t.type === '(' ? ')' : t.type === '[' ? ']' : '}';
             while (tok.length > 0 && tok[0].type !== end) {
-                expr.push(parse(tok, log, scope));
+                expr.push(parse(tok, scope, log));
                 // remove extra new lines
                 while (tok.length > 0 && tok[0].type === '\n') tok.shift();
             }
@@ -186,7 +186,7 @@ export function evaluate(node, env, log) {
  * @param {Function} log
  */
 export function joc(s, env, log = (e) => console.log(e)) {
-    let r = evaluate(parse(lex(s, log), log), env, log);
+    let r = evaluate(parse(lex(s, log), true, log), env, log);
     log(`(${r.type}) ${r.value}`);
     return r.value;
 }
