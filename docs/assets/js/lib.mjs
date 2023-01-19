@@ -43,5 +43,13 @@ export function std(evaluate) {
         '*': op((x, y) => x * y),
         '/': op((x, y) => x / y),
         '%': op((x, y) => x % y),
+        '=': op((x, y) => x === y),
+        '<': op((x, y) => x < y),
+        '>': op((x, y) => x > y),
+        '!=': op((x, y) => x !== y),
+        '<=': op((x, y) => x <= y),
+        '>=': op((x, y) => x >= y),
+        '&': op((x, y) => x && y),
+        '|': op((x, y) => x || y),
     };
 }
