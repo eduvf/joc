@@ -148,7 +148,7 @@ export function evaluate(node, env, log) {
                 }
             }
             // otherwise, process each element and return the last one
-            let result = { type: 'nothing', value: '' };
+            let result = { type: 'nothing', value: '', line: node.line };
             if (node.scope) env.push({}); // start scope
             for (let e of node.value) {
                 result = evaluate(e, env, log);
@@ -162,7 +162,7 @@ export function evaluate(node, env, log) {
                 if (node.value in env[i]) return env[i][node.value];
             }
             log(`[*] Couldn't find '${node.value}', returning nothing instead.`);
-            return { type: 'nothing', value: '' };
+            return { type: 'nothing', value: '', line: node.line };
         default:
             // is a literal value
             return node;
