@@ -98,31 +98,35 @@ export function parse(tok, log, head = true) {
         let t = tok.shift();
         // ignore extra new lines
         if (t.type === '\n') continue;
-        // an expression can start with...
+        // check for an expression
         if (t.type === 'key' || (head && t.type === 'word')) {
             // - a key
             // - a word, given that head == true
             let expr = [t];
-            while (tok.length > 0 && !'\n)'.includes(tok[0].type)) {
+            while (tok.length > 0 && !'\n)]}'.includes(tok[0].type)) {
                 expr.push(parse(tok, log, false));
             }
             return { type: 'expression', value: expr, scope: false, line: t.line };
-        } else if (t.type === '(') {
-            // - a parenthesis (...)
+        } else if (t.type === '(' || t.type === '[' || t.type === '{') {
+            // expression, table or map
             let expr = [];
-            let scope = tok[0].type === '\n';
             // a new line after the opening parenthesis treats all word keywords
             // starting a line, as starting an expression
-            while (tok.length > 0 && tok[0].type !== ')') {
+            let scope = t.type === '(' && tok[0].type === '\n';
+            // check type and ending brackets accordingly
+            let type = t.type === '(' ? 'expression' : t.type === '[' ? 'table' : 'map';
+            let end = t.type === '(' ? ')' : t.type === '[' ? ']' : '}';
+            while (tok.length > 0 && tok[0].type !== end) {
                 expr.push(parse(tok, log, scope));
+                // remove extra new lines
                 while (tok.length > 0 && tok[0].type === '\n') tok.shift();
             }
             if (tok.length === 0) {
-                log(`[*] Missing ending parenthesis for expression starting at line ${t.line}.`);
+                log(`[*] Missing ending bracket '${end}' for expression starting at line ${t.line}.`);
             } else {
                 tok.shift(); // remove ')'
             }
-            return { type: 'expression', value: expr, scope: scope, line: t.line };
+            return { type: type, value: expr, scope: scope, line: t.line };
         }
         // is an atom
         return t;
@@ -155,6 +159,10 @@ export function evaluate(node, env, log) {
             }
             if (node.scope) env.pop(); // end scope
             return result;
+        case 'table':
+        // TODO
+        case 'map':
+        // TODO
         case 'key':
         case 'word':
             // search of the reference from inner to outer scope
