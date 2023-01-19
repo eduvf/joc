@@ -13,43 +13,52 @@
 /**
  * Standard library
  */
-export function std(evaluate) {
-    function op(binFunc, unFunc = (x) => x) {
+export function std(evaluate, log = (e) => console.log(e)) {
+    function op(type, bin, un = (x) => x) {
         return {
             type: 'function',
-            value: (arg, env, line, msg) => {
-                if (arg.length === 0) return { type: 'nothing' };
-                if (arg.length === 1) return unFunc(evaluate(arg[0], env).value);
-                let first = evaluate(arg[0], env);
-                const type = first.type;
-                return arg.slice(1).reduce((total, e) => {
-                    e = evaluate(e, env);
-                    if (e.type !== type) {
-                        msg.push(`[*] Type mismatch in function at line ${line}.`);
-                        msg.push(`    Expected ${type}, got ${e.type}. `);
-                    }
-                    return { type: type, value: binFunc(total, e.value) };
-                }, first.value);
+            const: true,
+            value: (arg, env, line) => {
+                if (arg.length === 0) return { type: 'nothing', value: '' };
+                let first = evaluate(arg.shift(), env, log);
+                if (arg.length === 0) return { type: first.type, value: un(first.value) };
+                return {
+                    type: type,
+                    value: arg.reduce((acc, e) => {
+                        e = evaluate(e, env, log);
+                        if (e.type !== type) {
+                            log(`[*] Type mismatch in function at line ${line}. Expected ${type}, got ${e.type}.`);
+                        }
+                        return bin(acc, e.value);
+                    }, first.value),
+                };
             },
         };
     }
 
     return {
-        '+': op((x, y) => x + y),
+        // bool const
+        _0: { type: 'boolean', const: true, value: false },
+        _1: { type: 'boolean', const: true, value: true },
+        // basic math
+        '+': op('number', (x, y) => x + y),
         '-': op(
+            'number',
             (x, y) => x - y,
             (x) => -x
         ),
-        '*': op((x, y) => x * y),
-        '/': op((x, y) => x / y),
-        '%': op((x, y) => x % y),
-        '=': op((x, y) => x === y),
-        '<': op((x, y) => x < y),
-        '>': op((x, y) => x > y),
-        '!=': op((x, y) => x !== y),
-        '<=': op((x, y) => x <= y),
-        '>=': op((x, y) => x >= y),
-        '&': op((x, y) => x && y),
-        '|': op((x, y) => x || y),
+        '*': op('number', (x, y) => x * y),
+        '/': op('number', (x, y) => x / y),
+        '%': op('number', (x, y) => x % y),
+        // // comparison
+        // '=': op((x, y) => x === y),
+        // '<': op((x, y) => x < y),
+        // '>': op((x, y) => x > y),
+        // '!=': op((x, y) => x !== y),
+        // '<=': op((x, y) => x <= y),
+        // '>=': op((x, y) => x >= y),
+        // // logic
+        // '&': op((x, y) => x && y),
+        // '|': op((x, y) => x || y),
     };
 }

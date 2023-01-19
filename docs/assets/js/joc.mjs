@@ -5,31 +5,28 @@
  * repo: github.com/eduvf/joc
  *
  * This module is structured as follows:
- * - lex(s)
- * - parse(tok)
- * - evaluate(node, env)
- * - show(r)
+ * - lex(s, log)
+ * - parse(tok, log, head)
+ * - evaluate(node, env, log)
+ * - joc(s, env, log)
  *
  * lex() return a list of tokens, and parse() constructs an AST.
  * Then, evaluate() executes the code provided an environment to
- * work with, and returns the result. show() formats the result
- * as a string, along with the messages stored in 'msg'.
+ * work with, and returns the result.
+ * joc() is a wrapper function that does all of the above and
+ * takes optionally a 'log' function to output messages.
+ * By default, it just outputs to console with console.log().
  */
 
 //--------------------------------------------------------------
 
 /**
- * Stores messages to display to the user (prints, warnings, errors...)
- * @type {Array.<string>}
- */
-let msg = [];
-
-/**
  * Splits a string of joc code into tokens (objects)
  * @param {String} s
+ * @param {Function} log
  * @returns {Array.<object>} tok
  */
-export function lex(s) {
+export function lex(s, log) {
     let tok = [];
     let char;
     let line = 1;
@@ -54,7 +51,7 @@ export function lex(s) {
             // advance until a non-escaped quote is found
             for (; !(s[i - 1] !== '\\' && s[i] === char); i++) {
                 if (i > s.length) {
-                    msg.push(`[!] Unclosed string starting at line ${fromLine}.`);
+                    log(`[!] Unclosed string starting at line ${fromLine}.`);
                     return [];
                 }
                 if (s[i] === '\n') line++;
@@ -95,7 +92,7 @@ export function lex(s) {
             // ignore whitespace
             i++;
         } else {
-            msg.push(`[!] Invalid character '${char}' at line ${line}.`);
+            log(`[!] Invalid character '${char}' at line ${line}.`);
             return [];
         }
     }
@@ -105,10 +102,11 @@ export function lex(s) {
 /**
  * Takes a list of tokens and return an AST
  * @param {Array.<object>} tok
+ * @param {Function} log
  * @param {boolean} head
  * @returns {Object}
  */
-export function parse(tok, head = true) {
+export function parse(tok, log, head = true) {
     while (tok.length > 0) {
         let t = tok.shift();
         // an expression can start with...
@@ -117,7 +115,7 @@ export function parse(tok, head = true) {
             // - a word, given that head == true
             let expr = [t];
             while (tok.length > 0 && !'\n)'.includes(tok[0].type)) {
-                expr.push(parse(tok, false));
+                expr.push(parse(tok, log, false));
             }
             return { type: 'expression', value: expr, line: t.line };
         } else if (t.type === '(') {
@@ -127,11 +125,11 @@ export function parse(tok, head = true) {
             // a new line after the opening parenthesis treats all word keywords
             // starting a line, as starting an expression
             while (tok.length > 0 && tok[0].type !== ')') {
-                expr.push(parse(tok, isMulti));
+                expr.push(parse(tok, log, isMulti));
                 while (tok.length > 0 && tok[0].type === '\n') tok.shift();
             }
             if (tok.length === 0) {
-                msg.push(`[*] Missing ending parenthesis for expression starting at line ${t.line}.`);
+                log(`[*] Missing ending parenthesis for expression starting at line ${t.line}.`);
             } else {
                 tok.shift(); // remove ')'
             }
@@ -148,25 +146,26 @@ export function parse(tok, head = true) {
  * Interpret an AST and return the resulting value
  * @param {Object} node
  * @param {Array.<object>} env
+ * @param {Function} log
  * @returns {Object}
  */
-export function evaluate(node, env) {
+export function evaluate(node, env, log) {
     switch (node.type) {
         case 'scope':
         case 'expression':
             let scope = node.type === 'scope';
             if (!scope && node.value.length > 0) {
                 // if is an expression, check if the first element is a function
-                let func = evaluate(node.value[0], env);
+                let func = evaluate(node.value[0], env, log);
                 if (func.type === 'function') {
-                    return func.value(node.value.slice(1), env, node.line, msg);
+                    return func.value(node.value.slice(1), env, node.line, log);
                 }
             }
             // otherwise, process each element and return the last one
             let result = { type: 'nothing' };
             if (scope) env.push({}); // start scope
             for (let e of node.value) {
-                result = evaluate(e, env);
+                result = evaluate(e, env, log);
             }
             if (scope) env.pop(); //end scope
             return result;
@@ -176,7 +175,7 @@ export function evaluate(node, env) {
             for (let i = env.length - 1; i >= 0; i--) {
                 if (node.value in env[i]) return env[i][node.value];
             }
-            msg.push(`[*] Couldn't find '${node.value}', returning nothing instead.`);
+            log(`[*] Couldn't find '${node.value}', returning nothing instead.`);
             return { type: 'nothing' };
         default:
             // is a literal value
@@ -185,12 +184,15 @@ export function evaluate(node, env) {
 }
 
 /**
- * Takes a result from evaluate() and returns a string with
- * messages to the user and the result.
- * @param {Object} r
- * @returns {String}
+ * Calls lex(), parse() and evaluate(), and then takes the
+ * result from evaluate() and passes a string to log() with
+ * messages and the result.
+ * @param {String} s
+ * @param {Array.<object>} env
+ * @param {Function} log
  */
-export function show(r) {
-    msg.push(`(${r.type}) ${r.value}`);
-    return msg.splice(0, Infinity).join('\n');
+export function joc(s, env, log = (e) => console.log(e)) {
+    let r = evaluate(parse(lex(s, log), log), env, log);
+    log(`(${r.type}) ${r.value}`);
+    return r.value;
 }

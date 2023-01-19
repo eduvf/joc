@@ -48,7 +48,8 @@ header:
 <pre id="output"></pre>
 
 <script type="module">
-  import { lex, parse, evaluate } from './assets/js/joc.mjs';
+  import { joc, evaluate } from './assets/js/joc.mjs';
+  import { std } from './assets/js/lib.mjs';
 
   const lines = document.getElementById('lines');
   const editor = document.getElementById('editor');
@@ -84,10 +85,14 @@ header:
       ')';
     update();
   };
+
+  function log(e) {
+    output.innerText += '\n' + e;
+  }
+
   window.run = () => {
-    // let result = parse(lex('(' + editor.innerText + ')'));
-    // output.innerText += '\n' + evaluate().join('\n') + '\n' + JSON.stringify(result);
-    output.innerText += '\n :( WIP, not working yet';
+    let env = [std(evaluate, log)];
+    joc('(' + editor.innerText + ')', env, log);
   };
   window.empty = () => {
     output.innerText = 'joc 0.0.1';
