@@ -68,19 +68,6 @@ export function lex(s, log) {
             let from = i;
             for (i++; i < s.length && /[!-~]/.test(s[i]) && /[^'(),\[\]{}]/.test(s[i]); i++);
             let t = s.slice(from, i);
-            // check if number (int, float, ratio) or key
-            /*
-            if (/^(-?|0[xb])\d+$/.test(t)) {
-                // integer (including hex or binary)
-                tok.push({ type: 'integer', value: Number(t), line: line });
-            } else if (/^-?(\d*\.\d+)|(\d+\.\d*)$/.test(t)) {
-                // float
-                tok.push({ type: 'float', value: Number(t), line: line });
-            } else if (/^-?\d+:-?\d+$/.test(t)) {
-                // ratio
-                let ratio = t.split(':').map((e) => Number(e));
-                tok.push({ type: 'ratio', value: ratio, line: line });
-            */
             if (/^(-|0x|0b)?\d*\.?\d+$/.test(t)) {
                 // number
                 tok.push({ type: 'number', value: Number(t), line: line });
@@ -109,6 +96,8 @@ export function lex(s, log) {
 export function parse(tok, log, head = true) {
     while (tok.length > 0) {
         let t = tok.shift();
+        // ignore extra new lines
+        if (t.type === '\n') continue;
         // an expression can start with...
         if (t.type === 'key' || (head && t.type === 'word')) {
             // - a key
@@ -117,15 +106,15 @@ export function parse(tok, log, head = true) {
             while (tok.length > 0 && !'\n)'.includes(tok[0].type)) {
                 expr.push(parse(tok, log, false));
             }
-            return { type: 'expression', value: expr, line: t.line };
+            return { type: 'expression', value: expr, scope: false, line: t.line };
         } else if (t.type === '(') {
             // - a parenthesis (...)
             let expr = [];
-            let isMulti = tok[0].type === '\n';
+            let scope = tok[0].type === '\n';
             // a new line after the opening parenthesis treats all word keywords
             // starting a line, as starting an expression
             while (tok.length > 0 && tok[0].type !== ')') {
-                expr.push(parse(tok, log, isMulti));
+                expr.push(parse(tok, log, scope));
                 while (tok.length > 0 && tok[0].type === '\n') tok.shift();
             }
             if (tok.length === 0) {
@@ -133,13 +122,12 @@ export function parse(tok, log, head = true) {
             } else {
                 tok.shift(); // remove ')'
             }
-            return { type: isMulti ? 'scope' : 'expression', value: expr, line: t.line };
-        } else if (t.type === '\n') {
-            continue; // ignore extra new lines
+            return { type: 'expression', value: expr, scope: scope, line: t.line };
         }
+        // is an atom
         return t;
     }
-    return { type: 'nothing' };
+    return { type: 'nothing', value: '' };
 }
 
 /**
@@ -151,10 +139,8 @@ export function parse(tok, log, head = true) {
  */
 export function evaluate(node, env, log) {
     switch (node.type) {
-        case 'scope':
         case 'expression':
-            let scope = node.type === 'scope';
-            if (!scope && node.value.length > 0) {
+            if (!node.scope && node.value.length > 0) {
                 // if is an expression, check if the first element is a function
                 let func = evaluate(node.value[0], env, log);
                 if (func.type === 'function') {
@@ -162,12 +148,12 @@ export function evaluate(node, env, log) {
                 }
             }
             // otherwise, process each element and return the last one
-            let result = { type: 'nothing' };
-            if (scope) env.push({}); // start scope
+            let result = { type: 'nothing', value: '' };
+            if (node.scope) env.push({}); // start scope
             for (let e of node.value) {
                 result = evaluate(e, env, log);
             }
-            if (scope) env.pop(); //end scope
+            if (node.scope) env.pop(); // end scope
             return result;
         case 'key':
         case 'word':
@@ -176,7 +162,7 @@ export function evaluate(node, env, log) {
                 if (node.value in env[i]) return env[i][node.value];
             }
             log(`[*] Couldn't find '${node.value}', returning nothing instead.`);
-            return { type: 'nothing' };
+            return { type: 'nothing', value: '' };
         default:
             // is a literal value
             return node;

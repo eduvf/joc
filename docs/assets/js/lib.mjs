@@ -10,10 +10,12 @@
 
 //--------------------------------------------------------------
 
+import { evaluate } from './joc.mjs';
+
 /**
  * Standard library
  */
-export function std(evaluate, log = (e) => console.log(e)) {
+export function std(log = (e) => console.log(e)) {
     function op(type, bin, un = (x) => x) {
         return {
             type: 'function',
