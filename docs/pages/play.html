@@ -50,8 +50,8 @@ header:
 <pre id="output"></pre>
 
 <script type="module">
-  import { joc, evaluate } from './assets/js/joc.mjs';
-  import { std } from './assets/js/lib.mjs';
+  // import { joc, evaluate } from './assets/js/joc.mjs';
+  // import { std } from './assets/js/lib.mjs';
 
   const lines = document.getElementById('lines');
   const editor = document.getElementById('editor');
@@ -93,8 +93,8 @@ header:
   }
 
   window.run = () => {
-    let env = [std(evaluate, log)];
-    joc('(' + editor.innerText + ')', env, log);
+    // let env = [std(evaluate, log)];
+    // joc('(' + editor.innerText + ')', env, log);
   };
   window.empty = () => {
     output.innerText = 'joc 0.0.1';
