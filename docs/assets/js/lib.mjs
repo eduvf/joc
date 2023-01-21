@@ -27,11 +27,11 @@ export function lib(interpret, log) {
     };
 
     const shape = (fn) => (arg, env, line) => {
-        let last = arg.pop();
-        let axis = arg.map((a) => {
+        let last = arg.at(-1);
+        let axis = arg.slice(0, arg.length - 1).map((a) => {
             a = interpret(a, env);
             if (typeof a === 'number' || a >= 0) return a;
-            log(`[!] <-> requires numbers >= 0 as arguments before the table`);
+            log(`[!] Function at line ${line} requires numbers >= 0 as arguments before the table`);
             return 0;
         });
         return fn(axis, last, env);
@@ -49,9 +49,9 @@ export function lib(interpret, log) {
         // let
         ':': (arg, env, line) => {
             let r = undefined;
-            while (arg.length > 0) {
-                let name = arg.shift();
-                let value = arg.shift();
+            for (let i = 0; i < arg.length; i += 2) {
+                let name = arg.at(i);
+                let value = arg.at(i + 1);
                 if (name.type === 'word') {
                     r = value ? interpret(value, env) : undefined;
                     env[env.length - 1][name.value] = r;
@@ -64,9 +64,9 @@ export function lib(interpret, log) {
         // set
         '.': (arg, env, line) => {
             let r = undefined;
-            while (arg.length > 0) {
-                let name = arg.shift();
-                let value = arg.shift();
+            for (let i = 0; i < arg.length; i += 2) {
+                let name = arg.at(i);
+                let value = arg.at(i + 1);
                 if (name.type === 'word' && name.value.charAt(0) !== '_') {
                     r = value ? interpret(value, env) : undefined;
                     for (let i = env.length - 1; i >= 0; i--) {
@@ -80,6 +80,22 @@ export function lib(interpret, log) {
                 log(`[*] Invalid name for assignment at line ${line}`);
             }
             return r;
+        },
+        // for map
+        '@#': (arg, env, line) => {
+            if (arg.length !== 2) {
+                log(`[!] Function @# at line ${line} requires 2 arguments`);
+                return [];
+            }
+            let tab = interpret(arg[0], env);
+            let r = [];
+            if (Array.isArray(tab))
+                return tab.map((e) => {
+                    env[env.length - 1]['^'] = e;
+                    return interpret(arg[1], env);
+                });
+            log(`[!] First argument for function @# at line ${line} has to be a table`);
+            return [];
         },
         // add
         '+': op((x, y) => x + y),
@@ -118,8 +134,6 @@ export function lib(interpret, log) {
             }
             return r;
         }),
-        // reverse vertical
-        '<|>': shape((axis, last, env) => {}),
     };
     return [std];
 }

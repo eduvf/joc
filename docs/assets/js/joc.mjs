@@ -48,7 +48,7 @@ export function lex(s) {
             if (s.charAt(i) !== char) log(`[*] Unclosed string`);
             tok.push({ type: 'str', value: s.slice(from, i), line: line, i: i });
             i++; // skip ending quote
-        } else if (/[a-z_]/.test(char)) {
+        } else if (/[a-z_^]/.test(char)) {
             // word
             let from = i++;
             while (/[\w^!?~+*]/.test(s.charAt(i))) i++;
