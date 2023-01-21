@@ -6,10 +6,10 @@ let s1 = `
 `;
 
 let s2 = `
-: w 5 h 3
+: w 6 h 5
 ; : curr <> w h ?? 0 1
-,; . curr <|> -1 0 1 curr
-,; . curr <-> -1 0 1 curr
+; . curr <-> -1 0 1 curr
+; . curr <|> -1 0 1 curr
 ,; . curr + curr
 ,; . curr =| 3 4 curr
 'done'

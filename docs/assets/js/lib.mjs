@@ -17,16 +17,25 @@
  * @returns {Array.<Object>}
  */
 export function lib(interpret, log) {
-    function op(fn) {
-        return (arg, env, line) => {
-            arg = arg.map((a) => interpret(a, env));
-            let type = typeof arg.at(0);
-            return arg.reduce((prev, curr) => {
-                if (typeof curr !== type) log(`[*] Type mismatch at line ${line}`);
-                return fn(prev, curr);
-            });
-        };
-    }
+    const op = (fn) => (arg, env, line) => {
+        arg = arg.map((a) => interpret(a, env));
+        let type = typeof arg.at(0);
+        return arg.reduce((prev, curr) => {
+            if (typeof curr !== type) log(`[*] Type mismatch at line ${line}`);
+            return fn(prev, curr);
+        });
+    };
+
+    const shape = (fn) => (arg, env, line) => {
+        let last = arg.pop();
+        let axis = arg.map((a) => {
+            a = interpret(a, env);
+            if (typeof a === 'number' || a >= 0) return a;
+            log(`[!] <-> requires numbers >= 0 as arguments before the table`);
+            return 0;
+        });
+        return fn(axis, last, env);
+    };
 
     const std = {
         // (arg, env, line) => {},
@@ -82,19 +91,10 @@ export function lib(interpret, log) {
             return interpret(arg[Math.floor(Math.random() * arg.length)], env);
         },
         // reshape
-        '<>': (arg, env, line) => {
-            let axis = [];
-            while (arg.length > 1) {
-                let n = interpret(arg.shift(), env);
-                if (typeof n !== 'number' || n < 0) {
-                    log(`[!] <> requires numbers >= 0 as arguments before the table`);
-                    return [];
-                }
-                axis.push(n);
-            }
+        '<>': shape((axis, last, env) => {
             let tab = Array(axis.reduce((p, c) => p * c))
                 .fill(0)
-                .map(() => interpret(arg[0], env));
+                .map(() => interpret(last, env));
             for (let n of axis) {
                 let temp = [];
                 while (tab.length > 0) {
@@ -102,8 +102,24 @@ export function lib(interpret, log) {
                 }
                 tab = temp;
             }
-            return tab;
-        },
+            return tab[0];
+        }),
+        // reverse
+        '<->': shape((axis, last, env) => {
+            let tab = interpret(last, env);
+            if (axis.length === 0) return tab.reverse();
+            let r = [];
+            for (let n of axis) {
+                let temp = tab.slice(0);
+                for (let i = n; i !== 0; i -= Math.sign(i)) {
+                    i > 0 ? temp.unshift(temp.pop()) : temp.push(temp.shift());
+                }
+                r.push(temp);
+            }
+            return r;
+        }),
+        // reverse vertical
+        '<|>': shape((axis, last, env) => {}),
     };
     return [std];
 }
