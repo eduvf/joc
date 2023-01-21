@@ -3,14 +3,22 @@
 /**
  * file: joc.mjs
  * repo: github.com/eduvf/joc
+ *
+ * main file for the JavaScript joc interpreter
  */
 
 //--------------------------------------------------------------
 
 import { lib } from './lib.mjs';
 
+// used for printing stuff to the console or output window
 var log = (x) => console.log(format(x));
 
+/**
+ * takes a string and returns an array of tokens
+ * @param {String} s
+ * @returns {Array.<Object>} tok
+ */
 export function lex(s) {
     let tok = [];
     let char;
@@ -60,10 +68,15 @@ export function lex(s) {
             i++;
         }
     }
-
     return tok;
 }
 
+/**
+ * takes an array fo tokens and returns an AST made up of objects
+ * @param {Array.<Object>} tok
+ * @param {Boolean} scope
+ * @returns {Object}
+ */
 export function parse(tok, scope = true) {
     while (tok.length > 0) {
         let t = tok.shift(); // get token
@@ -92,6 +105,12 @@ export function parse(tok, scope = true) {
     return { type: 'nil' };
 }
 
+/**
+ * takes an AST and an environment, and interprets it
+ * @param {Object} node
+ * @param {Array.<Object>} env
+ * @returns {*}
+ */
 export function interpret(node, env) {
     switch (node.type) {
         case 'exp':
@@ -140,12 +159,18 @@ export function interpret(node, env) {
     }
 }
 
+/**
+ * takes some value and returns a string representation
+ * @param {*} value
+ * @param {Number} level
+ * @returns {String}
+ */
 export function format(value, level = 0) {
     switch (typeof value) {
         case 'function':
             return '(~ ...)';
         case 'number':
-            return value;
+            return `${value}`;
         case 'string':
             return `'${value}'`;
         case 'object':
@@ -166,6 +191,13 @@ export function format(value, level = 0) {
     }
 }
 
+/**
+ * wraps lex(), parse() and interpret() to execute some joc code
+ * @param {String} code
+ * @param {Array} env
+ * @param {*} output
+ * @returns {*}
+ */
 export function joc(code, env, output) {
     if (output) log = output;
     if (!env) env = lib(interpret, log);
