@@ -171,9 +171,8 @@ export function format(value, level = 0) {
         case 'function':
             return '(~ ...)';
         case 'number':
-            return `${value}`;
         case 'string':
-            return `'${value}'`;
+            return `${value}`;
         case 'object':
             if (Array.isArray(value))
                 return (
