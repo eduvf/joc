@@ -41,10 +41,11 @@ export function lex(s) {
             // string
             let from = ++i;
             // advance until a non-escaped quote is found
-            while (s.charAt(i) && !(s[i - 1] !== '\\' && s[i] === "'")) {
+            while (s.charAt(i) && !(s[i - 1] !== '\\' && s[i] === char)) {
                 if (s[i] === '\n') line++;
                 i++;
             }
+            if (s.charAt(i) !== char) log(`[*] Unclosed string`);
             tok.push({ type: 'str', value: s.slice(from, i), line: line, i: i });
             i++; // skip ending quote
         } else if (/[a-z_]/.test(char)) {
