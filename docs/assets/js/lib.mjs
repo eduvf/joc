@@ -137,28 +137,23 @@ export function lib(interpret, log) {
         // reverse vertical
         '<|>': shape((axis, last, env) => {
             let tab = interpret(last, env);
-            if (axis.length === 0) axis.push(Math.floor(tab.length / 2));
-            if (tab.every(Array.isArray)) {
-                let r = [];
-                for (let e of tab) {
-                    let tempE = [];
-                    for (let n of axis) {
-                        let tempAxis = [];
-                        for (let row of e) {
-                            let tempRow = row.slice(0);
-                            for (let i = n; i !== 0; i -= Math.sign(i)) {
-                                i > 0 ? tempRow.unshift(tempRow.pop()) : tempRow.push(tempRow.shift());
-                            }
-                            tempAxis.push(tempRow);
-                        }
-                        tempE.push(tempAxis);
-                    }
-                    r.push(tempE);
-                }
-                return r;
+            if (axis.length === 0) {
+                for (let e of tab) e.reverse();
+                return tab;
             }
-            log(`[!] Function <|> requires a table of tables as last argument`);
-            return [];
+            let r = [];
+            for (let n of axis) {
+                let temp = [];
+                for (let e of tab) {
+                    let tempE = e.slice(0);
+                    for (let i = n; i !== 0; i -= Math.sign(i)) {
+                        i > 0 ? tempE.unshift(tempE.pop()) : tempE.push(tempE.shift());
+                    }
+                    temp.push(tempE);
+                }
+                r.push(temp);
+            }
+            return r;
         }),
         // transpose
         '</>': (arg, env, line) => {
@@ -171,6 +166,18 @@ export function lib(interpret, log) {
                 return tab[0].map((_, col) => tab.map((row) => row[col]));
             }
         },
+        // deep sum
+        '<+>': shape((axis, last, env) => {
+            let tab = interpret(last, env).flat(Infinity);
+            for (let n of axis) {
+                let temp = [];
+                while (tab.length > 0) {
+                    temp.push(tab.splice(0, n).reduce((p, c) => p + c));
+                }
+                tab = temp;
+            }
+            return tab;
+        }),
     };
     return [std];
 }

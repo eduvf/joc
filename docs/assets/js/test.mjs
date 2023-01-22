@@ -6,12 +6,11 @@ let s1 = `
 `;
 
 let s2 = `
-: w 4 h 4
-: curr <> w h ?? 'x' 'o'
-: curr [[1 2 3][4 5 6][7 8 9]]
+: w 5 h 4
+: curr <> w h ?? 0 1
 . curr <-> -1 0 1 ^
-. curr <|> -1 0 1 ^
-,; . curr + curr
+. curr @# curr <|> -1 0 1 ^
+; curr
 ,; . curr =| 3 4 curr
 ; curr
 'done'
@@ -31,7 +30,7 @@ win w h (
 
 let s4 = `
 : t [['a' 'b' 'c']['d' 'e' 'f']['g' 'h' 'i']['j' 'k' 'l']]
-<|> t
+<|> 0 1 2 t
 `;
 
-joc('(' + s4 + ')');
+joc('(' + s2 + ')');
