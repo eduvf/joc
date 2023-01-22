@@ -8,10 +8,9 @@ let s1 = `
 let s2 = `
 : w 5 h 4
 : curr <> w h ?? 0 1
-. curr <-> -1 0 1 ^
-. curr @# curr <|> -1 0 1 ^
-; curr
-,; . curr =| 3 4 curr
+,. curr <-> -1 0 1 ^
+,. curr <|> -1 0 1 ^
+,. curr =| 3 4 curr
 ; curr
 'done'
 `;
