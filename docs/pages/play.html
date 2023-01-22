@@ -50,8 +50,8 @@ header:
 <pre id="output"></pre>
 
 <script type="module">
-  // import { joc, evaluate } from './assets/js/joc.mjs';
-  // import { std } from './assets/js/lib.mjs';
+  import { joc, interpret } from './assets/js/joc.mjs';
+  import { lib } from './assets/js/lib.mjs';
 
   const lines = document.getElementById('lines');
   const editor = document.getElementById('editor');
@@ -75,16 +75,13 @@ header:
   }
 
   window.example = () => {
-    editor.innerText =
-      ': w 64 h 32\n' +
-      ': curr <> w h ?? 0 1\n' +
-      ': next ~ c =| (+ <-> -1 0 1 <|> -1 0 1 c) 3 4\n' +
-      'win w h (\n' +
-      '    bg 0\n' +
-      '    @ x y curr ? ^ (pix x y (col 0xfff))\n' +
-      '    . curr (next curr)\n' +
-      '    zzz 1\n' +
-      ')';
+    editor.innerText = `: fact ~ n (
+  ? (< 0 n) (
+    * n (fact - n 1)
+  ) 1
+)
+
+fact 10`;
     update();
   };
 
@@ -93,8 +90,8 @@ header:
   }
 
   window.run = () => {
-    // let env = [std(evaluate, log)];
-    // joc('(' + editor.innerText + ')', env, log);
+    let env = lib(interpret, log);
+    joc('(' + editor.innerText + ')', env, log);
   };
   window.empty = () => {
     output.innerText = 'joc 0.0.1';

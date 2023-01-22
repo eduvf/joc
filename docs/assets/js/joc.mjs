@@ -91,7 +91,7 @@ export function parse(tok, scope = true) {
             return { type: 'exp', fn: t, args: args, line: t.line, i: t.i };
         } else if ('([{'.includes(t.type)) {
             let list = [];
-            let type = { '(': 'scp', '[': 'tab', '{': 'map' }[t.type];
+            let type = { '(': 'scope', '[': 'list', '{': 'map' }[t.type];
             let end = { '(': ')', '[': ']', '{': '}' }[t.type];
             while (tok.length > 0 && tok[0].type !== end) {
                 tok[0].type === '\n'
@@ -120,7 +120,7 @@ export function interpret(node, env) {
                 return fn(node.args, env, node.line);
             }
             log(`[*] Couldn't find function for expression:\n${node}`);
-        case 'scp':
+        case 'scope':
             let r = undefined;
             env.push({}); // start scope
             for (let e of node.value) {
@@ -129,12 +129,8 @@ export function interpret(node, env) {
             }
             env.pop(); // end scope
             return r;
-        case 'tab':
-            let t = [];
-            for (let e of node.value) {
-                t.push(interpret(e, env));
-            }
-            return t;
+        case 'list':
+            return node.value.map((e) => interpret(e, env));
         case 'map':
             let m = {};
             for (let i = 0; i < node.value.length; i += 2) {

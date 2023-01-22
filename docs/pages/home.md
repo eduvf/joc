@@ -16,12 +16,11 @@ header:
 ## example
 
 ```joc
-: w 64 h 32
-: curr <> w h ?? 0 1
-: next ~ c =| (+ <-> -1 0 1 <|> -1 0 1 c) 3 4
-win w h
-    bg 0
-    @ x y curr ? ^ pix x y col 0xfff
-    . curr next curr
-    zzz 1
+: fact ~ n (
+  ? (< 0 n) (
+    * n (fact - n 1)
+  ) 1
+)
+
+fact 10
 ```
