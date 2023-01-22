@@ -91,7 +91,7 @@ export function parse(tok, scope = true) {
             return { type: 'exp', fn: t, args: args, line: t.line, i: t.i };
         } else if ('([{'.includes(t.type)) {
             let list = [];
-            let type = { '(': 'scope', '[': 'list', '{': 'map' }[t.type];
+            let type = { '(': 'scope', '[': 'tab', '{': 'map' }[t.type];
             let end = { '(': ')', '[': ']', '{': '}' }[t.type];
             while (tok.length > 0 && tok[0].type !== end) {
                 tok[0].type === '\n'
@@ -129,7 +129,7 @@ export function interpret(node, env) {
             }
             env.pop(); // end scope
             return r;
-        case 'list':
+        case 'tab':
             return node.value.map((e) => interpret(e, env));
         case 'map':
             let m = {};
