@@ -134,6 +134,43 @@ export function lib(interpret, log) {
             }
             return r;
         }),
+        // reverse vertical
+        '<|>': shape((axis, last, env) => {
+            let tab = interpret(last, env);
+            if (axis.length === 0) axis.push(Math.floor(tab.length / 2));
+            if (tab.every(Array.isArray)) {
+                let r = [];
+                for (let e of tab) {
+                    let tempE = [];
+                    for (let n of axis) {
+                        let tempAxis = [];
+                        for (let row of e) {
+                            let tempRow = row.slice(0);
+                            for (let i = n; i !== 0; i -= Math.sign(i)) {
+                                i > 0 ? tempRow.unshift(tempRow.pop()) : tempRow.push(tempRow.shift());
+                            }
+                            tempAxis.push(tempRow);
+                        }
+                        tempE.push(tempAxis);
+                    }
+                    r.push(tempE);
+                }
+                return r;
+            }
+            log(`[!] Function <|> requires a table of tables as last argument`);
+            return [];
+        }),
+        // transpose
+        '</>': (arg, env, line) => {
+            let tab = interpret(arg.at(0), env);
+            if (Array.isArray(tab)) {
+                if (tab.length === 0) return [];
+                let len = tab[0].length;
+                if (!tab.every((e) => Array.isArray(e) && e.length === len))
+                    log(`[*] Table for transposing isn't square, some elements will be added/removed (line ${line})`);
+                return tab[0].map((_, col) => tab.map((row) => row[col]));
+            }
+        },
     };
     return [std];
 }
