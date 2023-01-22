@@ -96,7 +96,7 @@ export function parse(tok, scope = true) {
             while (tok.length > 0 && tok[0].type !== end) {
                 tok[0].type === '\n'
                     ? tok.shift() // ignore extra new lines
-                    : list.push(parse(tok, true));
+                    : list.push(parse(tok, type === 'scope'));
             }
             if (tok.length > 0) tok.shift(); // remove end bracket
             return { type: type, value: list, line: t.line, i: t.i };

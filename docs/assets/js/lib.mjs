@@ -161,7 +161,50 @@ export function lib(interpret, log) {
         // reverse
         '<->': shape('<->', (axis, last, env) => {
             let tab = interpret(last, env);
-            // TODO
+            return (function iter(x) {
+                if (typeof x === 'object') {
+                    if (Array.isArray(x)) return x.map(iter);
+                    if ('_' in x) {
+                        if (axis.length === 0) return { $: x.$, _: x._.reverse() };
+                        return axis.map((a) => {
+                            let temp = x._.slice(0);
+                            for (let i = a; i !== 0; i -= Math.sign(i))
+                                i > 0 ? temp.unshift(temp.pop()) : temp.push(temp.shift());
+                            return { $: x.$, _: temp };
+                        });
+                    }
+                } else if (typeof x === 'string') {
+                    return iter(x.split(''))._.join('');
+                }
+                log(`[!] Couldn't reverse`);
+                return [];
+            })(tab);
+        }),
+        // reverse vertical
+        '<|>': shape('<|>', (axis, last, env) => {
+            let tab = interpret(last, env);
+            return (function iter(x) {
+                if (typeof x === 'object') {
+                    if (Array.isArray(x)) return x.map(iter);
+                    if ('_' in x) {
+                        if (axis.length === 0) {
+                            return { $: x.$, _: x._.map((e) => e.reverse()) };
+                        }
+                        return axis.map((a) => {
+                            let r = [];
+                            for (let e of x._) {
+                                let temp = e.slice(0);
+                                for (let i = a; i !== 0; i -= Math.sign(i))
+                                    i > 0 ? temp.unshift(temp.pop()) : temp.push(temp.shift());
+                                r.push(temp);
+                            }
+                            return { $: x.$, _: r };
+                        });
+                    }
+                }
+                log(`[!] Couldn't reverse`);
+                return [];
+            })(tab);
         }),
     };
     return [std];
