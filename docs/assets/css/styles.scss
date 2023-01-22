@@ -26,7 +26,7 @@ $screem-md: 900px;
 }
 
 html {
-    font-family: "Inter", "", system-ui, -apple-system, sans-serif;
+    font-family: 'Inter', '', system-ui, -apple-system, sans-serif;
     font-size: 14pt;
     background-color: var(--bg);
     color: var(--fg);
@@ -72,9 +72,9 @@ nav {
 header {
     padding: 4rem 0 2rem;
     text-align: center;
-    background-image: url("../bg/pieces.svg");
+    background-image: url('../bg/pieces.svg');
     @media (prefers-color-scheme: dark) {
-        background-image: url("../bg/pieces-dark.svg");
+        background-image: url('../bg/pieces-dark.svg');
     }
     background-position: center;
     background-size: auto;
@@ -89,7 +89,7 @@ header {
 main {
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: stretch;
     @media (max-width: $screen-sm) {
         flex-direction: column;
     }
@@ -128,23 +128,23 @@ h3,
 h4,
 h5,
 h6 {
-    font-family: "Metropolis", sans-serif;
+    font-family: 'Metropolis', sans-serif;
 }
 
 pre,
 code {
     background-color: var(--mg);
-    font-family: "FiraCode";
+    font-family: 'FiraCode';
 }
 pre {
     padding: 1rem;
-    max-width: calc(100vw - 2rem);
     overflow: scroll;
 }
 
 button {
     border: none;
-    padding: 1rem 2rem;
+    margin: 0.5rem;
+    padding: 1rem;
     font-size: inherit;
     background-color: var(--mg);
 }

@@ -17,7 +17,7 @@
  * @returns {Array.<Object>}
  */
 export function lib(interpret, log) {
-    return [std()];
+    return [std(interpret, log)];
 }
 
 //--------------------------------------------------------------
