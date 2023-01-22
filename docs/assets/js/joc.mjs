@@ -48,10 +48,10 @@ export function lex(s) {
             if (s.charAt(i) !== char) log(`[*] Unclosed string`);
             tok.push({ type: 'str', value: s.slice(from, i), line: line, i: i });
             i++; // skip ending quote
-        } else if (/[a-z_^]/.test(char)) {
+        } else if (/[a-z^_]/.test(char)) {
             // word
             let from = i++;
-            while (/[\w^!?~+*]/.test(s.charAt(i))) i++;
+            while (/[a-z0-9^_!?~+*]/.test(s.charAt(i))) i++;
             tok.push({ type: 'word', value: s.slice(from, i), line: line, i: i });
         } else if (/[!-~]/.test(char)) {
             // key or number
