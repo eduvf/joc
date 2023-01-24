@@ -40,12 +40,13 @@ export function lex(s) {
         } else if (char === "'") {
             // string
             let from = ++i;
+            let fromLine = line;
             // advance until a non-escaped quote is found
             while (s.charAt(i) && !(s[i - 1] !== '\\' && s[i] === char)) {
                 if (s[i] === '\n') line++;
                 i++;
             }
-            if (s.charAt(i) !== char) log(`[*] Unclosed string`);
+            if (s.charAt(i) !== char) log(`[*] Unclosed string starting at line ${fromLine}!`);
             tok.push({ type: 'str', value: s.slice(from, i), line: line, i: i });
             i++; // skip ending quote
         } else if (/[a-z^_]/.test(char)) {
