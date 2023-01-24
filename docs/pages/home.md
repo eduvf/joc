@@ -29,11 +29,11 @@ In order to illustrate **joc** expressiveness, let's take a look at three ways t
 
 ```joc
 : factorial ~ n (
-  : result 1
-  @ (.. 1 + n 1) i (
-    . result * result i
-  )
-  result
+    : result 1
+    @ (.. 1 n) i (
+        .* result + i 1
+    )
+    result
 )
 ```
 
@@ -41,9 +41,9 @@ In order to illustrate **joc** expressiveness, let's take a look at three ways t
 
 ```joc
 : factorial ~ n (
-  ? (< 0 n) (
-    * n (factorial - n 1
-  ) 1
+    ? (< 0 n) (
+        * n (factorial - n 1)
+    ) 1
 )
 ```
 

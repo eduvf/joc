@@ -2,14 +2,13 @@
 ---
 
 @mixin font-face($family, $style, $weight, $type) {
-	@font-face {
-		font-family: $family;
-		font-style: $style;
-		font-weight: $weight;
-		font-display: swap;
-		src: url('../fonts/' + $family + '/' + $family + '-' + $type + '.woff')
-			format('woff');
-	}
+    @font-face {
+        font-family: $family;
+        font-style: $style;
+        font-weight: $weight;
+        font-display: swap;
+        src: url('../fonts/' + $family + '/' + $family + '-' + $type + '.woff') format('woff');
+    }
 }
 
 @include font-face('Inter', normal, 100, 'Thin');
@@ -25,7 +24,7 @@
 @include font-face('Inter', italic, 100, 'ThinItalic');
 @include font-face('Inter', italic, 200, 'ExtraLightItalic');
 @include font-face('Inter', italic, 300, 'LightItalic');
-@include font-face('Inter', italic, 400, 'RegularItalic');
+@include font-face('Inter', italic, 400, 'Italic');
 @include font-face('Inter', italic, 500, 'MediumItalic');
 @include font-face('Inter', italic, 600, 'SemiBoldItalic');
 @include font-face('Inter', italic, 700, 'BoldItalic');
