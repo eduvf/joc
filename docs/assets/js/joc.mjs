@@ -128,7 +128,7 @@ export function interpret(node, env) {
             if (typeof fn === 'function') return fn(node.args, env, node.line);
             log(`[*] Couldn't find function for expression at line ${node.line}.`);
         case 'scope':
-            let r = undefined;
+            let r;
             env.push({}); // start scope
             for (let e of node.value) {
                 env[env.length - 1]['^'] = r;
@@ -157,7 +157,7 @@ export function interpret(node, env) {
             }
             log(`[*] Could not find '${node.value}' at line ${node.line}, returning nil instead.`);
         case 'nil':
-            return undefined;
+            return;
         default:
             // number or string
             return node.value;

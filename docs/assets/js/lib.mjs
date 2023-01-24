@@ -10,7 +10,7 @@
 //--------------------------------------------------------------
 
 import { std } from './std.mjs';
-import { mat } from './mat.mjs';
+// import { mat } from './mat.mjs';
 
 /**
  * returns an environment with the standard joc library, as well
@@ -20,6 +20,5 @@ import { mat } from './mat.mjs';
  * @returns {Array.<Object>}
  */
 export function lib(interpret, log) {
-    const env = [std(interpret, log)];
-    return env;
+    return [std(interpret, log)];
 }

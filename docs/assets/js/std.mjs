@@ -16,15 +16,16 @@
  */
 export function std(interpret, log) {
     const pairs = (fn) => (arg, env, line) => {
-        let r = undefined;
+        let r;
         for (let i = 0; i < arg.length; i += 2) {
-            let pair = { k: arg.at(i), v: arg.at(i + 1) };
-            if (pair.k.type === 'word') {
-                r = pair.v ? interpret(pair.v, env) : undefined;
-                fn(pair.k.value, r, env, line);
+            let key = arg.at(i);
+            let val = arg.at(i + 1);
+            if (key && key.type === 'word') {
+                r = val ? interpret(val, env) : undefined;
+                fn(key.value, r, env, line);
                 continue;
             }
-            log(`[*] Invalid name for assignment at line ${line}`);
+            log(`[*] Invalid name for assignment at line ${line}.`);
         }
         return r;
     };
@@ -67,13 +68,15 @@ export function std(interpret, log) {
         }),
         // set
         '.': pairs((name, value, env, line) => {
-            if (name.charAt(0) !== '_')
+            if (name.charAt(0) !== '_') {
                 for (let i = env.length - 1; i >= 0; i--)
                     if (name in env[i]) {
                         env[i][name] = value;
                         return;
                     }
-            log(`[!] Words starting with '_' can't be modified (line ${line})`);
+                log(`[*] Couldn't find value for '${name}' at line ${line}, returning nil instead.`);
+            }
+            log(`[!] Words starting with '_' can't be modified! (line ${line})`);
         }),
         // fn
         '~': (arg, env, line) => {
