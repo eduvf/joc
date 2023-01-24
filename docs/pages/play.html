@@ -91,7 +91,7 @@ fact 10`;
 
   window.run = () => {
     let env = lib(interpret, log);
-    joc('(' + editor.innerText + ')', env, log);
+    joc(editor.innerText, env, log);
   };
   window.empty = () => {
     output.innerText = 'joc 0.0.1';

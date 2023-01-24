@@ -197,7 +197,7 @@ export function format(value, level = 0) {
 export function joc(code, env, output) {
     if (output) log = output;
     if (!env) env = lib(interpret, log);
-    let r = interpret(parse(lex(code)), env);
+    let r = interpret(parse(lex('(' + code + ')')), env);
     log(r);
     return r;
 }
