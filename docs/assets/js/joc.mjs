@@ -11,13 +11,16 @@
 
 import { lib } from './lib.mjs';
 
-// used for printing stuff to the console or output window
+/**
+ * used for printing stuff to the console or output window
+ * @type {Function}
+ */
 var log = (x) => console.log(format(x));
 
 /**
  * takes a string and returns an array of tokens
  * @param {String} s
- * @returns {Array.<Object>} tok
+ * @returns {Array.<Object>}
  */
 export function lex(s) {
     let tok = [];
@@ -26,7 +29,8 @@ export function lex(s) {
 
     let i = 0;
     while (i < s.length) {
-        char = s[i]; // current character
+        // current character
+        char = s[i];
 
         if (char === ',') {
             // comment
@@ -49,10 +53,10 @@ export function lex(s) {
             if (s.charAt(i) !== char) log(`[*] Unclosed string starting at line ${fromLine}!`);
             tok.push({ type: 'str', value: s.slice(from, i), line: line, i: i });
             i++; // skip ending quote
-        } else if (/[a-z^_]/.test(char)) {
+        } else if (/[A-Za-z^_]/.test(char)) {
             // word
             let from = i++;
-            while (/[a-z0-9^_!?~+*]/.test(s.charAt(i))) i++;
+            while (/[\w^!?~+*]/.test(s.charAt(i))) i++;
             tok.push({ type: 'word', value: s.slice(from, i), line: line, i: i });
         } else if (/[!-~]/.test(char)) {
             // key or number
@@ -60,13 +64,13 @@ export function lex(s) {
             while (/[!-~]/.test(s.charAt(i)) && !"([{}])',".includes(s.charAt(i))) i++;
             let t = s.slice(from, i);
             tok.push(
-                /^(-?\d*\.?\d+)|(0[xb][\da-fA-F]+)$/.test(t)
+                /^(-?\d*\.?\d+)|(0[xb][\dA-Fa-f]+)$/.test(t)
                     ? { type: 'num', value: Number(t), line: line, i: i } // number
                     : { type: 'key', value: t, line: line, i: i } // key
             );
         } else {
             // ignore everything else
-            if (/\S/.test(char)) log(`[*] Invalid character '${char}' will be ignored!`);
+            if (/\S/.test(char)) log(`[*] Invalid character '${char}' at line ${line} will be ignored!`);
             i++;
         }
     }
@@ -81,8 +85,10 @@ export function lex(s) {
  */
 export function parse(tok, scope = true) {
     while (tok.length > 0) {
-        let t = tok.shift(); // get token
-        if (t.type === '\n') continue; // ignore extra new lines
+        // get token
+        let t = tok.shift();
+        // ignore extra new lines
+        if (t.type === '\n') continue;
         // check for a function key/word
         if (t.type === 'key' || (scope && t.type === 'word')) {
             let args = [];
@@ -94,16 +100,18 @@ export function parse(tok, scope = true) {
             let list = [];
             let type = { '(': 'scope', '[': 'tab', '{': 'map' }[t.type];
             let end = { '(': ')', '[': ']', '{': '}' }[t.type];
-            while (tok.length > 0 && tok[0].type !== end) {
+            while (tok.length > 0 && tok[0].type !== end)
                 tok[0].type === '\n'
                     ? tok.shift() // ignore extra new lines
                     : list.push(parse(tok, type === 'scope'));
-            }
-            if (tok.length > 0) tok.shift(); // remove end bracket
+            // remove end bracket
+            if (tok.length > 0) tok.shift();
             return { type: type, value: list, line: t.line, i: t.i };
         }
-        return t; // atom
+        // is atom
+        return t;
     }
+    // is empty expression
     return { type: 'nil' };
 }
 
@@ -117,10 +125,8 @@ export function interpret(node, env) {
     switch (node.type) {
         case 'exp':
             let fn = interpret(node.fn, env);
-            if (typeof fn === 'function') {
-                return fn(node.args, env, node.line);
-            }
-            log(`[*] Couldn't find function for expression:\n${node}`);
+            if (typeof fn === 'function') return fn(node.args, env, node.line);
+            log(`[*] Couldn't find function for expression at line ${node.line}.`);
         case 'scope':
             let r = undefined;
             env.push({}); // start scope
@@ -140,7 +146,7 @@ export function interpret(node, env) {
                     m[name] = i + 1 < node.value.length ? interpret(node.value[i + 1], env) : undefined;
                     continue;
                 }
-                log(`[*] Expected key, word or string for map assignment:\n${node}`);
+                log(`[*] Expected key, word or string for map assignment at line ${node.line}.`);
             }
             return m;
         case 'key':
@@ -149,10 +155,11 @@ export function interpret(node, env) {
             for (let i = env.length - 1; i >= 0; i--) {
                 if (node.value in env[i]) return env[i][node.value];
             }
-            log(`[*] Could not find '${node.value}', returning nil instead`);
+            log(`[*] Could not find '${node.value}' at line ${node.line}, returning nil instead.`);
         case 'nil':
             return undefined;
-        default: // number or string
+        default:
+            // number or string
             return node.value;
     }
 }
@@ -180,7 +187,7 @@ export function format(value, level = 0) {
             // otherwise, it's a map
             let s = '{\n';
             for (let k in value) {
-                s += k + ' ' + format(value[k]) + '\n';
+                s += `${k} → ${format(value[k])}\n`;
             }
             return s + '\n}';
         default:
@@ -192,7 +199,7 @@ export function format(value, level = 0) {
  * wraps lex(), parse() and interpret() to execute some joc code
  * @param {String} code
  * @param {Array} env
- * @param {*} output
+ * @param {Function} output
  * @returns {*}
  */
 export function joc(code, env, output) {
