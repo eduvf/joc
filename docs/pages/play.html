@@ -50,8 +50,7 @@ header:
 <pre id="output"></pre>
 
 <script type="module">
-  import { joc, interpret } from './assets/js/joc.mjs';
-  import { lib } from './assets/js/lib.mjs';
+  import joc from './assets/js/joc.mjs';
 
   const lines = document.getElementById('lines');
   const editor = document.getElementById('editor');
@@ -90,8 +89,7 @@ fact 10`;
   }
 
   window.run = () => {
-    let env = lib(interpret, log);
-    joc(editor.innerText, env, log);
+    joc(editor.innerText, log);
   };
   window.empty = () => {
     output.innerText = 'joc 0.0.1';
