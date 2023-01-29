@@ -100,16 +100,6 @@ export default function lib(interpret, log, format) {
                 return r;
             };
         },
-        // mac
-        $: (arg, env, line) => {
-            /**
-             *
-             *
-             * TODO
-             *
-             *
-             */
-        },
 
         // if
         '?': (arg, env, line) => {
@@ -127,14 +117,35 @@ export default function lib(interpret, log, format) {
                 while ((r = interpret(arg[0], env))) {}
             } else if (arg.length === 2) {
                 while (interpret(arg[0], env)) r = interpret(arg[1], env);
-            } else {
-                /**
-                 *
-                 *
-                 * TODO
-                 *
-                 *
-                 */
+            } else if (2 < arg.length && arg.length < 5) {
+                const coll = interpret(arg[0], env);
+                if (typeof coll !== 'object') {
+                    log(`[!] First argument in loop '@' with > 2 arguments has to be a table or map (line ${line})`);
+                    return;
+                }
+                if (arg[1].type !== 'word') {
+                    log(`[!] Expected word, got '${arg[1].type}' as index (2nd arg.) in loop '@' (line ${line})`);
+                    return;
+                }
+                if (arg.length === 4 && arg[2].type !== 'word') {
+                    log(`[!] Expected word, got '${arg[2].type}' as value (3rd arg.) in loop '@' (line ${line})`);
+                    return;
+                }
+                const idx = arg[1].value;
+                const val = arg.length === 4 ? arg[2].value : null;
+                const body = (x) => {
+                    env[env.length - 1]['^'] = r;
+                    env[env.length - 1][idx] = x;
+                    if (val) env[env.length - 1][val] = coll[x];
+                    r = interpret(arg.at(-1), env);
+                };
+                env.push({}); // new scope
+                if (Array.isArray(coll)) {
+                    for (let i = 0; i < coll.length; i++) body(i);
+                } else {
+                    for (const k in coll) body(k);
+                }
+                env.pop(); // remove scope
             }
             return r;
         },
@@ -160,23 +171,55 @@ export default function lib(interpret, log, format) {
 
         // inc
         '++': (arg, env, line) => {
-            /**
-             *
-             *
-             * TODO
-             *
-             *
-             */
+            if (arg.length !== 1) {
+                log[`[!] Increment requires only one argument (line ${line})`];
+                return;
+            }
+            if (arg[0].type !== 'word') {
+                log(`[*] Invalid name for increment (line ${line})`);
+                return;
+            }
+            const name = arg[0].value;
+            if (name.charAt(0) === '_') {
+                log(`[!] Words starting with '_' can't be modified! (line ${line})`);
+                return;
+            }
+            for (let i = env.length - 1; i >= 0; i--)
+                if (name in env[i]) {
+                    if (typeof env[i][name] !== 'number') {
+                        log(`[!] Couldn't increment '${name}' because it doesn't contain a number.`);
+                        return;
+                    }
+                    env[i][name] = env[i][name] + 1;
+                    return env[i][name];
+                }
+            log(`[*] Couldn't increment '${name}' because it wasn't declared (line ${line})`);
         },
         // dec
         '--': (arg, env, line) => {
-            /**
-             *
-             *
-             * TODO
-             *
-             *
-             */
+            if (arg.length !== 1) {
+                log[`[!] Decrement requires only one argument (line ${line})`];
+                return;
+            }
+            if (arg[0].type !== 'word') {
+                log(`[*] Invalid name for decrement (line ${line})`);
+                return;
+            }
+            const name = arg[0].value;
+            if (name.charAt(0) === '_') {
+                log(`[!] Words starting with '_' can't be modified! (line ${line})`);
+                return;
+            }
+            for (let i = env.length - 1; i >= 0; i--)
+                if (name in env[i]) {
+                    if (typeof env[i][name] !== 'number') {
+                        log(`[!] Couldn't decrement '${name}' because it doesn't contain a number.`);
+                        return;
+                    }
+                    env[i][name] = env[i][name] + 1;
+                    return env[i][name];
+                }
+            log(`[*] Couldn't decrement '${name}' because it wasn't declared (line ${line})`);
         },
         // pow
         '**': op('**', (x, y) => x ** y),
@@ -239,14 +282,27 @@ export default function lib(interpret, log, format) {
         },
         // range
         '..': (arg, env, line) => {
-            if (arg.length > 3) log(`[*] Too many arguments for range '..', max: 3 (line ${line})`);
-            /**
-             *
-             *
-             * TODO
-             *
-             *
-             */
+            if (arg.length === 0) return [];
+            if (arg.length > 3) {
+                log(`[*] Too many arguments for range '..', max: 3 (line ${line})`);
+                return [];
+            }
+            const from = arg.length > 1 ? interpret(arg[0], env) : 0;
+            const to = interpret(arg.length > 1 ? arg[1] : arg[0], env);
+            const step = arg.length > 2 ? interpret(arg[2], env) : 1;
+            if (![from, to, step].every((e) => typeof e === 'number')) {
+                log(`[*] Range '..' can only take numbers as arguments (line ${line})`);
+                return [];
+            }
+            if (from > to) {
+                log(`[*] Range '..' start (${from}) must be less than end (${to}) (line ${line})`);
+                return [];
+            }
+            let r = [];
+            for (let i = from; i < to; i += step) {
+                r.push(i);
+            }
+            return r;
         },
         // get ref
         '->': (arg, env, line) => {

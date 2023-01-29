@@ -23,4 +23,15 @@ let s3 = `
 + 5 5
 `;
 
-joc(s1);
+let s4 = `
+: fib ~ n (
+    ? (< n 2) n + (fib - n 1) (fib - n 2)
+)
+
+@ (.. 1 10) i v (
+    ; i v (fib i)
+    ++ i
+)
+`;
+
+joc(s4);
