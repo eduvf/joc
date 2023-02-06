@@ -9,6 +9,11 @@ let test2 = `
 ; ? (= (fib 8) 21) 'true' 'false'
 `;
 
+let test3 = `
++ 5 5
+- 2 (2)
+`;
+
 let r = parse(Array.from(lex('(' + test2 + ')')).reverse());
 
 console.dir(r, { depth: null });

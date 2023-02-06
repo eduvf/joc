@@ -69,13 +69,13 @@ export function parse(tok, firstInLine = true) {
         // expressions that run until the end of the line or
         // the next closing bracket
         if (t.type === 'key' || (firstInLine && t.type === 'word')) {
-            let expr = [t];
+            let list = [];
             while (tok.length > 0 && !'\n)]}'.includes(tok.at(-1).type)) {
-                expr.push(parse(tok, false));
+                list.push(parse(tok, false));
             }
-            return expr;
+            return { type: 'call', fn: t.val, arg: list, line: t.line };
         } else if ('([{'.includes(t.type)) {
-            let list = [t];
+            let list = [];
             const end = { '(': ')', '[': ']', '{': '}' }[t.type];
             while (tok.length > 0 && tok.at(-1).type !== end) {
                 tok.at(-1).type === '\n'
@@ -86,10 +86,10 @@ export function parse(tok, firstInLine = true) {
                 log(`[!] Missing ending bracket '${end}' for list starting at line ${t.line}`);
                 return;
             }
-            // simplify single expressions
-            if (t.type === '(' && list.length === 2) list = list[1];
             if (tok.length > 0) tok.pop(); // remove end bracket
-            return list;
+            // simplify single expressions
+            if (t.type === '(' && list.length === 1) return list[0];
+            return { type: t.type, val: list, line: t.line };
         } else if ('}])'.includes(t.type)) {
             log(`[!] Unexpected closing bracket '${t.type}' at line ${t.line}`);
             return;
