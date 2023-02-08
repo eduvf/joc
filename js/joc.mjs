@@ -112,4 +112,12 @@ export function parse(tok, first) {
     }
 }
 
-export function validate(node, env = [{}]) {}
+export function validate(node, env = [{}]) {
+    if (node.type === 'word') {
+        // search from inner to outer scope
+        for (let i = env.length; i >= 0; i--) {
+            if (node.val in env[i]) return env[i][node.val];
+        }
+        throw `[!] Cannot find a value for '${node.val}' at line ${node.line}`;
+    }
+}
