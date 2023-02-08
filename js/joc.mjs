@@ -1,10 +1,24 @@
+let log = console.log;
+
+export default function joc(code, debug, output) {
+    if (output) log = output;
+    try {
+        let tok = Array.from(lex('(' + code + ')')).reverse();
+        if (debug) console.dir(tok, { depth: null });
+
+        let ast = parse(tok);
+        if (debug) console.dir(ast, { depth: null });
+    } catch (error) {
+        log(error);
+    }
+}
+
 export function* lex(code) {
     let line = 1;
-    let pos = -1;
-    let char = '';
+    let pos = 0;
 
+    let char = code.charAt(0);
     const next = () => (char = code.charAt(++pos));
-    next();
 
     while (char) {
         const c = char;
@@ -58,7 +72,7 @@ export function* lex(code) {
     }
 }
 
-export function parse(tok, firstInLine = true) {
+export function parse(tok, first) {
     let t;
     // get token (or undefined if 'tok' is empty)
     while ((t = tok.pop())) {
@@ -68,15 +82,15 @@ export function parse(tok, firstInLine = true) {
         // keys (anywhere) and words (starting a line) create
         // expressions that run until the end of the line or
         // the next closing bracket
-        if (t.type === 'key' || (firstInLine && t.type === 'word')) {
+        if (t.type === 'key' || (first && t.type === 'word')) {
             let list = [];
             while (tok.length > 0 && !'\n)]}'.includes(tok.at(-1).type)) {
-                list.push(parse(tok, false));
+                list.push(parse(tok));
             }
             return { type: 'call', fn: t.val, arg: list, line: t.line };
         } else if ('([{'.includes(t.type)) {
             let list = [];
-            const end = { '(': ')', '[': ']', '{': '}' }[t.type];
+            const end = ')]}'.charAt('([{'.indexOf(t.type));
             while (tok.length > 0 && tok.at(-1).type !== end) {
                 tok.at(-1).type === '\n'
                     ? tok.pop() // ignore extra new lines
@@ -97,3 +111,5 @@ export function parse(tok, firstInLine = true) {
         return t;
     }
 }
+
+export function validate(node, env = [{}]) {}

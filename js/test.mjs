@@ -1,4 +1,4 @@
-import { lex, parse } from './joc.mjs';
+import joc from './joc.mjs';
 
 let test = `: f ~ n * .. 1 n`;
 
@@ -14,6 +14,4 @@ let test3 = `
 - 2 (2)
 `;
 
-let r = parse(Array.from(lex('(' + test2 + ')')).reverse());
-
-console.dir(r, { depth: null });
+joc(test2, true);
