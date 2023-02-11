@@ -1,123 +1,98 @@
+// @ts-check
+
 let log = console.log;
 
-export default function joc(code, debug, output) {
-    if (output) log = output;
-    try {
-        let tok = Array.from(lex('(' + code + ')')).reverse();
-        if (debug) console.dir(tok, { depth: null });
-
-        let ast = parse(tok);
-        if (debug) console.dir(ast, { depth: null });
-    } catch (error) {
-        log(error);
-    }
+export default function joc(code) {
+    log(lex(code));
+    console.dir(parse(lex(code)), { depth: null });
 }
 
-export function* lex(code) {
-    let line = 1;
-    let pos = 0;
-
+function lex(code) {
+    let tok = ['('];
+    let pos = 1;
     let char = code.charAt(0);
-    const next = () => (char = code.charAt(++pos));
+
+    const next = () => {
+        if (char === '\n') tok.push('\n');
+        return (char = code.charAt(pos++));
+    };
 
     while (char) {
-        const c = char;
+        // comment
+        if (char === ',') while (next()) if (char === '\n') break;
 
-        if (c === ',') {
-            // comment
-            while (next() && c !== '\n');
-        } else if (c === '\n') {
-            // new line
-            yield { type: c, line: ++line };
-            next();
-        } else if ('([{}])'.includes(c)) {
+        if ('([{}])'.includes(char)) {
             // bracket
-            yield { type: c, line: line };
-            next();
-        } else if (c === "'") {
+            tok.push(char);
+        } else if (char === "'") {
             // string
-            const from = pos + 1;
-            const fromLine = line;
-            let prev = c;
+            const from = pos - 1;
             // advance until a non-escaped quote is found
-            while (next() && !(prev !== '\\' && char === c)) {
-                if (char === '\n') line++;
-                prev = char;
-            }
-            if (!char) {
-                throw `[!] Unclosed string starting at line ${fromLine}`;
-            }
-            yield { type: 'str', val: code.slice(from, pos), line: fromLine };
-            next(); // skip ending quote
-        } else if (/\S/.test(c)) {
-            // word, key or number
-            const from = pos;
+            while (!(char !== '\\' && next() === "'")) if (!char) throw `[!] Unclosed string`;
+            tok.push(code.slice(from, pos - 1));
+        } else if (/\S/.test(char)) {
+            // reference or number
+            let t = char;
             // match everything except whitespace, commas, single quotes and brackets
-            while (/[^\s,'()\[\]{}]/.test(next()));
-            const t = code.slice(from, pos);
-            if (/^(-?\d*\.?\d+)|(0[xb][\dA-Fa-f]+)$/.test(t)) {
-                // number
-                yield { type: 'num', val: Number(t), line: line };
-            } else if (/^[!-@|~]/.test(t)) {
-                // key
-                yield { type: 'key', val: t, line: line };
-            } else {
-                // word
-                yield { type: 'word', val: t, line: line };
-            }
-        } else {
-            // ignore everything else
-            next();
+            while (/[^\s,'()\[\]{}]/.test(next())) t += char;
+            pos -= 1; // fix offset
+            // check if boolean
+            if (['ok', 'no'].includes(t)) t = t === 'ok';
+            // check if number
+            if (/^(-?\d*\.?\d+)|(0[xb][\dA-Fa-f]+)$/.test(t)) t = Number(t);
+            tok.push(t);
         }
+        next();
     }
+    tok.push(')');
+    return tok.reverse();
 }
 
-export function parse(tok, first) {
+function parse(tok, line = 1, first = false) {
+    if (!tok.length) return;
+
     let t;
-    // get token (or undefined if 'tok' is empty)
-    while ((t = tok.pop())) {
-        // ignore extra lines
-        if (t.type === '\n') continue;
+    while ((t = tok.pop()) === '\n') line++;
 
-        // keys (anywhere) and words (starting a line) create
-        // expressions that run until the end of the line or
-        // the next closing bracket
-        if (t.type === 'key' || (first && t.type === 'word')) {
-            let list = [];
-            while (tok.length > 0 && !'\n)]}'.includes(tok.at(-1).type)) {
-                list.push(parse(tok));
+    if (typeof t === 'boolean') return ['bool', t];
+    if (typeof t === 'number') return ['num', t];
+    if (t.charAt(0) === "'") return ['str', t.slice(1)];
+
+    if ('([{'.includes(t)) {
+        let list = [];
+        const end = ')]}'.charAt('([{'.indexOf(t));
+        while (tok.length && tok.at(-1) !== end)
+            if (tok.at(-1) !== '\n') list.push(parse(tok, line, t === '('));
+            else {
+                tok.pop();
+                line++;
             }
-            return { type: 'call', fn: t.val, arg: list, line: t.line };
-        } else if ('([{'.includes(t.type)) {
-            let list = [];
-            const end = ')]}'.charAt('([{'.indexOf(t.type));
-            while (tok.length > 0 && tok.at(-1).type !== end) {
-                tok.at(-1).type === '\n'
-                    ? tok.pop() // ignore extra new lines
-                    : list.push(parse(tok, t.type === '('));
-            }
-            if (tok.length > 0 && tok.at(-1).type !== end) {
-                log(`[!] Missing ending bracket '${end}' for list starting at line ${t.line}`);
-                return;
-            }
-            if (tok.length > 0) tok.pop(); // remove end bracket
-            // simplify single expressions
-            if (t.type === '(' && list.length === 1) return list[0];
-            return { type: t.type, val: list, line: t.line };
-        } else if ('}])'.includes(t.type)) {
-            log(`[!] Unexpected closing bracket '${t.type}' at line ${t.line}`);
-            return;
-        }
-        return t;
+        if (!tok.length || tok.at(-1) !== end) throw `[!] Missing ending bracket '${end}'`;
+        if (tok.length > 0) tok.pop(); // remove end bracket
+        // simplify single expressions
+        if (t === '(' && list.length === 1) return list[0];
+        return [t, list];
     }
+    if (')]}'.includes(t)) throw `[!] Unexpected closing bracket '${t}' at line ${line}`;
+
+    if (/^[!-@|~]/.test(t) || first) {
+        let args = [];
+        while (tok.length && !'\n)]}'.includes(tok.at(-1))) {
+            args.push(parse(tok, line));
+        }
+        return ['call', t, args];
+    }
+    return ['ref', t];
 }
 
-export function validate(node, env = [{}]) {
-    if (node.type === 'word') {
-        // search from inner to outer scope
-        for (let i = env.length; i >= 0; i--) {
-            if (node.val in env[i]) return env[i][node.val];
-        }
-        throw `[!] Cannot find a value for '${node.val}' at line ${node.line}`;
+function compile(branch, pcode = []) {
+    let b = branch[0];
+    if (['bool', 'num', 'str'].includes(b)) {
+        pcode.push(['ps', b, branch[1]]);
+    } else if (b === 'ref') {
+        pcode.push(['ld', branch[1]]);
     }
+    /**
+     * TODO
+     */
 }

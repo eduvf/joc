@@ -7,6 +7,7 @@ let test2 = `
     ? (< n 2) n + (fib - n 1) (fib - n 2)
 )
 ; ? (= (fib 8) 21) 'true' 'false'
+ok
 `;
 
 let test3 = `
