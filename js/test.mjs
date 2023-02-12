@@ -7,12 +7,20 @@ let test2 = `
     ? (< n 2) n + (fib - n 1) (fib - n 2)
 )
 ; ? (= (fib 8) 21) 'true' 'false'
+fib 10
 ok
 `;
 
 let test3 = `
 + 5 5
-- 2 (2)
+- 2 [2]
 `;
 
-joc(test2, true);
+let test4 = `
+, . sum ~ x y + x y
+. a 1
+. b 2
++ a b
+`;
+
+joc(test4, true);

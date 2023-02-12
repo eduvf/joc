@@ -1,98 +1,195 @@
 // @ts-check
 
-let log = console.log;
+/**
+ * compile and evaluate a string of joc code
+ * @param {String} code - joc code to evaluate
+ * @param {Boolean} debug - enable/disable compiler debugging
+ * @param {Function} log - where to output messages
+ */
+export default function joc(code, debug, log = console.log) {
+    try {
+        let tok = lex('(' + code + ')');
+        if (debug) console.dir(tok, { depth: null });
 
-export default function joc(code) {
-    log(lex(code));
-    console.dir(parse(lex(code)), { depth: null });
+        let ast = parse(tok.reverse());
+        if (debug) console.dir(ast, { depth: null });
+
+        let pcode = compile(ast);
+        if (debug) console.dir(pcode, { depth: null });
+
+        interpret(pcode);
+    } catch (error) {
+        log('[!] ' + error);
+    }
 }
 
+/**
+ * split a string of joc code into an array of tokens
+ * @param {String} code - joc code
+ * @returns {Array.<(Array|String)>}
+ */
 function lex(code) {
-    let tok = ['('];
+    let tok = [];
     let pos = 1;
     let char = code.charAt(0);
-
-    const next = () => {
-        if (char === '\n') tok.push('\n');
-        return (char = code.charAt(pos++));
-    };
+    const next = () => (char = code.charAt(pos++));
 
     while (char) {
-        // comment
-        if (char === ',') while (next()) if (char === '\n') break;
+        // @ts-ignore comment
+        if (char === ',') while (next() && char !== '\n');
 
-        if ('([{}])'.includes(char)) {
-            // bracket
+        if ('\n([{}])'.includes(char)) {
+            // special characters
             tok.push(char);
         } else if (char === "'") {
             // string
-            const from = pos - 1;
-            // advance until a non-escaped quote is found
-            while (!(char !== '\\' && next() === "'")) if (!char) throw `[!] Unclosed string`;
-            tok.push(code.slice(from, pos - 1));
+            let s = '';
+            while (!(s.charAt(-1) !== '\\' && next() === "'")) {
+                if (!char) throw 'Unclosed string';
+                s += char;
+            }
+            tok.push(['str', s]);
         } else if (/\S/.test(char)) {
-            // reference or number
+            // boolean, number or symbol
             let t = char;
-            // match everything except whitespace, commas, single quotes and brackets
             while (/[^\s,'()\[\]{}]/.test(next())) t += char;
             pos -= 1; // fix offset
-            // check if boolean
-            if (['ok', 'no'].includes(t)) t = t === 'ok';
-            // check if number
-            if (/^(-?\d*\.?\d+)|(0[xb][\dA-Fa-f]+)$/.test(t)) t = Number(t);
-            tok.push(t);
+            if (['ok', 'no'].includes(t)) {
+                tok.push(['bool', t === 'ok']);
+            } else if (/^(-?\d*\.?\d+)|(0[xb][\dA-Fa-f]+)$/.test(t)) {
+                tok.push(['num', Number(t)]);
+            } else if (/^[!-@|~]/.test(t)) {
+                tok.push(['key', t]);
+            } else {
+                tok.push(['ref', t]);
+            }
         }
         next();
     }
-    tok.push(')');
-    return tok.reverse();
+    return tok;
 }
 
-function parse(tok, line = 1, first = false) {
-    if (!tok.length) return;
-
-    let t;
-    while ((t = tok.pop()) === '\n') line++;
-
-    if (typeof t === 'boolean') return ['bool', t];
-    if (typeof t === 'number') return ['num', t];
-    if (t.charAt(0) === "'") return ['str', t.slice(1)];
-
-    if ('([{'.includes(t)) {
-        let list = [];
-        const end = ')]}'.charAt('([{'.indexOf(t));
-        while (tok.length && tok.at(-1) !== end)
-            if (tok.at(-1) !== '\n') list.push(parse(tok, line, t === '('));
-            else {
-                tok.pop();
-                line++;
+/**
+ * transform an array of tokens into an AST
+ * @param {Array} tok - array of tokens
+ * @param {Boolean} first - if first in expression
+ */
+function parse(tok, first = false) {
+    let t; // get token
+    while ((t = tok.pop())) {
+        // ignore extra new lines
+        if (t === '\n') continue;
+        if (')]}'.includes(t)) throw `Unexpected bracket '${t}'`;
+        // check for expressions
+        if ('([{'.includes(t)) {
+            let branch = ['('];
+            const end = ')]}'.charAt('([{'.indexOf(t));
+            while (tok.length && tok[tok.length - 1] !== end) {
+                if (tok[tok.length - 1] === '\n') tok.pop();
+                else branch.push(parse(tok, t === '('));
             }
-        if (!tok.length || tok.at(-1) !== end) throw `[!] Missing ending bracket '${end}'`;
-        if (tok.length > 0) tok.pop(); // remove end bracket
-        // simplify single expressions
-        if (t === '(' && list.length === 1) return list[0];
-        return [t, list];
-    }
-    if (')]}'.includes(t)) throw `[!] Unexpected closing bracket '${t}' at line ${line}`;
-
-    if (/^[!-@|~]/.test(t) || first) {
-        let args = [];
-        while (tok.length && !'\n)]}'.includes(tok.at(-1))) {
-            args.push(parse(tok, line));
+            if (tok[tok.length - 1] !== end) throw `Missing ending bracket '${end}'`;
+            tok.pop(); // pop end bracket
+            if (branch.length === 2) return branch[1];
+            return branch;
         }
-        return ['call', t, args];
+        if (t[0] === 'key' || (t[0] === 'ref' && first)) {
+            let branch = ['call', t[1]];
+            while (tok.length && !'\n)]}'.includes(tok[tok.length - 1])) {
+                branch.push(parse(tok));
+            }
+            return branch;
+        }
+        // atom
+        return t;
     }
-    return ['ref', t];
 }
 
-function compile(branch, pcode = []) {
-    let b = branch[0];
-    if (['bool', 'num', 'str'].includes(b)) {
-        pcode.push(['ps', b, branch[1]]);
-    } else if (b === 'ref') {
-        pcode.push(['ld', branch[1]]);
+function validate() {
+    // TODO
+}
+
+function compile(ast) {
+    let pcode = [];
+    let env = [{}];
+
+    const builtins = {
+        '.': (node) => {
+            env[env.length - 1][node[0][1]] = 0;
+            walk(node[1]);
+            pcode.push(['st', node[0][1]]);
+        },
+    };
+
+    const walk = (node) => {
+        let head = node.shift();
+        if (head === '(') {
+            env.push({});
+            node.forEach((e, i) => {
+                walk(e);
+                if (i < node.length - 1) pcode.push(['pp']);
+            });
+            for (const key in env[env.length - 1]) pcode.push(['fr', key]);
+        } else if (head === 'call') {
+            let fn = node.shift();
+            if (fn in builtins) builtins[fn](node);
+            else {
+                node.forEach((e) => walk(e));
+                pcode.push(['cl', fn]);
+            }
+        } else if (head === 'ref') {
+            let found = false;
+            for (let i = env.length - 1; i >= 0; i--) {
+                if (node[0] in env[env.length - 1]) found = true;
+            }
+            if (!found) throw `Couldn't find '${node[0]}'`;
+            pcode.push(['ld', node.shift()]);
+        } else {
+            pcode.push(['ps', node.shift()]);
+        }
+    };
+    walk(ast);
+    return pcode;
+}
+
+function interpret(pcode) {
+    let stack = [];
+    let env = [{}];
+
+    const lib = {
+        '+': (x, y) => x + y,
+    };
+
+    for (let ip = 0; ip < pcode.length; ip++) {
+        let ins = pcode[ip].at(0);
+        let arg = pcode[ip].at(1);
+        switch (ins) {
+            case 'ps':
+                stack.push(arg);
+                break;
+            case 'pp':
+                stack.pop();
+                break;
+            case 'jp':
+                ip += arg;
+                break;
+            case 'jz':
+                if (!stack.pop()) ip += arg;
+                break;
+            case 'cl':
+                let y = stack.pop();
+                let x = stack.pop();
+                stack.push(lib[arg](x, y));
+                break;
+            case 'st':
+                env[env.length - 1][arg] = stack.pop();
+                break;
+            case 'ld':
+                stack.push(env[env.length - 1][arg]);
+                break;
+            case 'fr':
+                delete env[env.length - 1][arg];
+                break;
+        }
     }
-    /**
-     * TODO
-     */
 }
