@@ -1,11 +1,17 @@
 // @ts-check
 
 export default function joc(code, debug) {
-    const tok = lex(code);
-    console.log(tok);
+    try {
+        const tok = lex(code);
+        if (debug) console.log(tok);
 
-    const ast = parse(tok);
-    console.dir(ast, { depth: null });
+        brackets(tok);
+
+        const ast = parse(tok);
+        if (debug) console.dir(ast, { depth: null });
+    } catch (error) {
+        console.warn('[!] ' + error);
+    }
 }
 
 function lex(code) {
@@ -24,6 +30,15 @@ function lex(code) {
     });
 }
 
+function brackets(tok) {
+    let counter = [0, 0, 0]; // round, square, curly
+    for (const t of tok) {
+        if ('([{'.includes(t[0])) counter['([{'.indexOf(t[0])]++;
+        if (')]}'.includes(t[0])) counter[')]}'.indexOf(t[0])]--;
+    }
+    if (!counter.every((n) => n === 0)) throw 'Brackets mismatch';
+}
+
 function parse(tok) {
     const walk = (first = true, endln = false, tree = []) => {
         if (tok.length === 0) return tree;
@@ -31,11 +46,13 @@ function parse(tok) {
 
         const t = tok.shift();
         if (t[0] === '\n') return walk(first, endln, tree);
-        if (t[0] === '(') return walk(false, endln, tree.concat([walk(false, false)]));
-        if (t[0] === ')') return tree;
-        if (t[0] === 'key' || first) return walk(true, endln, tree.concat([walk(false, true, [t])]));
+        if (')]}'.includes(t[0])) return tree;
+        if ('([{'.includes(t[0]))
+            return walk(false, endln, tree.concat([walk(false)]));
+        if (first || t[0] === 'key')
+            return walk(true, endln, tree.concat([walk(false, true, [t])]));
 
-        return walk(false, endln, [...tree, t]);
+        return walk(false, endln, tree.concat([t]));
     };
     return walk();
 
