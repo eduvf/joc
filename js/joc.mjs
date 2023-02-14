@@ -25,15 +25,17 @@ function lex(code) {
 }
 
 function parse(tok) {
-    const walk = (tree = []) => {
+    const walk = (first = true, endln = false, tree = []) => {
         if (tok.length === 0) return tree;
+        if (endln && tok[0][0] === '\n') return tree;
 
         const t = tok.shift();
-        if (t[0] === '\n') return walk(tree);
-        if (t[0] === '(') return walk(tree.concat([walk()]));
+        if (t[0] === '\n') return walk(first, endln, tree);
+        if (t[0] === '(') return walk(false, endln, tree.concat([walk(false, false)]));
         if (t[0] === ')') return tree;
+        if (t[0] === 'key' || first) return walk(true, endln, tree.concat([walk(false, true, [t])]));
 
-        return walk([...tree, t]);
+        return walk(false, endln, [...tree, t]);
     };
     return walk();
 
