@@ -1,26 +1,20 @@
 import joc from './joc.mjs';
 
-let test = `: f ~ n * .. 1 n`;
+let t0 = `
++ 5 (5)
+`;
 
-let test2 = `
-: fib ~ n (
-    ? (< n 2) n + (fib - n 1) (fib - n 2)
+let t1 = `
+. i 0
+@ (< i 10) (
+    : i + i 1
 )
-; ? (= (fib 8) 21) 'true' 'false'
-fib 10
-ok
+; ? (= i 9) 'is' 'isn\\'t'
 `;
 
-let test3 = `
-+ 5 5
-- 2 [2]
+let t2 = `
+(. f (~ n (* (.. 1 n))))
+(f 10)
 `;
 
-let test4 = `
-, . sum ~ x y + x y
-. a 1
-. b 2
-+ a b
-`;
-
-joc(test4, true);
+joc(t2, true);
