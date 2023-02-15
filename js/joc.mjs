@@ -44,22 +44,23 @@ function brackets(tok) {
     if (!counter.every((n) => n === 0)) throw 'Brackets mismatch';
 }
 
-function parse(tok) {
-    const walk = (first = true, endln = false, tree = []) => {
-        if (tok.length === 0) return tree;
-        if (endln && tok[0][0] === '\n') return tree;
+function parse(tok, head = true, end = false, tree = [['list']]) {
+    while (tok.length > 0) {
+        if (end && '\n)'.includes(tok[0][0])) break;
 
         const t = tok.shift();
-        if (t[0] === '\n') return walk(first, endln, tree);
-        if (')]}'.includes(t[0])) return tree;
+        if (t[0] === '\n') continue;
+        if (')]}'.includes(t[0])) break;
         if ('([{'.includes(t[0]))
-            return walk(false, endln, tree.concat([walk(false)]));
-        if (first || t[0] === 'key')
-            return walk(true, endln, tree.concat([walk(false, true, [t])]));
-
-        return walk(false, endln, tree.concat([t]));
-    };
-    return walk();
+            return parse(tok, false, end, tree.concat([parse(tok)]));
+        if (head || t[0] === 'key') {
+            const branch = parse(tok, false, true, [t]);
+            return parse(tok, true, end, tree.concat([branch]));
+        }
+        head = false;
+        tree.push(t);
+    }
+    return tree;
 }
 
 const lib = {
@@ -75,4 +76,12 @@ const lib = {
 function get(sym, env, i = env.length - 1) {
     if (sym in env.i) return env.i.sym;
     return i > 0 ? get(sym, env, i - 1) : null;
+}
+
+function compile() {
+    const traverse = (node) => {
+        if (node[0] === 'list') {
+            traverse(node.slice(1));
+        }
+    };
 }
