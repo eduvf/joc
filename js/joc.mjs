@@ -1,5 +1,10 @@
 // @ts-check
 
+// TODO:
+// format()
+// log
+// check()
+
 export default function joc(code, debug) {
     try {
         const tok = lex(code);
