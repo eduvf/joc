@@ -61,3 +61,18 @@ function parse(tok) {
     };
     return walk();
 }
+
+const lib = {
+    '+': (...xs) => xs.reduce((a, b) => a + b),
+    '-': (...xs) => xs.reduce((a, b) => a - b, 0),
+    '*': (...xs) => xs.reduce((a, b) => a * b),
+    '/': (...xs) => xs.reduce((a, b) => a / b),
+    '%': (...xs) => xs.reduce((a, b) => a % b),
+    '::': (...xs) => [...xs],
+    '->': (x) => x,
+};
+
+function get(sym, env, i = env.length - 1) {
+    if (sym in env.i) return env.i.sym;
+    return i > 0 ? get(sym, env, i - 1) : null;
+}
