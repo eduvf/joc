@@ -27,4 +27,4 @@ let t3 = `
 g
 `;
 
-joc(t3, true);
+joc(t1, true);

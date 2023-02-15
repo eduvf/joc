@@ -25,35 +25,35 @@ function lex(code) {
     const key = /^[!-@|~]/;
 
     return code.match(token).map((t) => {
-        if (t === '\n') return ['\n'];
-        if ('([{}])'.includes(t)) return [t];
-        if (t.charAt(0) === "'") return ['str', t.slice(1, -1)];
-        if (number.test(t)) return ['num', Number(t)];
-        if (t === 'ok') return ['bool', true];
-        if (t === 'no') return ['bool', false];
-        return [key.test(t) ? 'key' : 'ref', t];
+        if (t === '\n') return '\n';
+        if ('([{}])'.includes(t)) return t;
+        if (number.test(t)) return { num: Number(t) };
+        if (t.charAt(0) === "'") return { str: t.slice(1, -1) };
+        if (t === 'ok' || t === 'no') return { bool: t === 'ok' };
+        if (key.test(t)) return { key: t };
+        return { ref: t };
     });
 }
 
 function brackets(tok) {
     let counter = [0, 0, 0]; // round, square, curly
     for (const t of tok) {
-        if ('([{'.includes(t[0])) counter['([{'.indexOf(t[0])]++;
-        if (')]}'.includes(t[0])) counter[')]}'.indexOf(t[0])]--;
+        if ('([{'.includes(t)) counter['([{'.indexOf(t)]++;
+        if (')]}'.includes(t)) counter[')]}'.indexOf(t)]--;
     }
     if (!counter.every((n) => n === 0)) throw 'Brackets mismatch';
 }
 
-function parse(tok, head = true, end = false, tree = [['list']]) {
+function parse(tok, head = true, end = false, tree = []) {
     while (tok.length > 0) {
-        if (end && '\n)'.includes(tok[0][0])) break;
+        if (end && '\n)'.includes(tok[0])) break;
 
         const t = tok.shift();
-        if (t[0] === '\n') continue;
-        if (')]}'.includes(t[0])) break;
-        if ('([{'.includes(t[0]))
+        if (t === '\n') continue;
+        if (')]}'.includes(t)) break;
+        if ('([{'.includes(t))
             return parse(tok, false, end, tree.concat([parse(tok)]));
-        if (head || t[0] === 'key') {
+        if (head || t.key) {
             const branch = parse(tok, false, true, [t]);
             return parse(tok, true, end, tree.concat([branch]));
         }
