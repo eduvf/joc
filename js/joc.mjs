@@ -47,7 +47,7 @@ function brackets(tok) {
 
 function parse(tok, head = true, end = false, tree = []) {
     while (tok.length > 0) {
-        if (end && '\n)'.includes(tok[0])) break;
+        if (end && '\n)]}'.includes(tok[0])) break;
 
         const t = tok.shift();
         if (t === '\n') continue;
