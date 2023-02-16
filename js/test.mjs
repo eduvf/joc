@@ -27,6 +27,7 @@ let t3 = `
     ; two
 )
 ; two
+? (- 1 1) 'oops' (no) 'almost' 'yeah'
 `;
 
 joc(t3, true);

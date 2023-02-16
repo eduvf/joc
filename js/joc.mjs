@@ -82,9 +82,13 @@ const core = {
         env[env.length - 1][name] = interpret(val, env);
     },
     '~': () => {},
-    '?': ([, cond, then, alt], env) => {
-        const r = interpret(cond, env) ? then : alt;
-        return interpret(r, env);
+    '?': ([_, ...ifthen], env) => {
+        let r = null;
+        while (ifthen.length)
+            if ((r = interpret(ifthen.shift(), env)))
+                return ifthen.length ? interpret(ifthen.shift(), env) : r;
+            else ifthen.shift();
+        return r;
     },
     '^': ([_, ...xs], env) => {
         env.push({});
