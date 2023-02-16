@@ -14,6 +14,9 @@ export default function joc(code, debug) {
 
         const ast = parse(tok);
         if (debug) console.dir(ast, { depth: null });
+
+        const r = interpret(ast);
+        if (debug) console.log('--> ' + r);
     } catch (error) {
         console.warn('[!] ' + error);
     }
@@ -22,7 +25,6 @@ export default function joc(code, debug) {
 function lex(code) {
     const token = /'(?:[\\].|[^\\'])*'|[(){}\[\]\n]|[^\s()]+/g;
     const number = /^(-?\d*\.?\d+)|(0[xb][\dA-Fa-f]+)$/;
-    const key = /^[!-@|~]/;
 
     return code.match(token).map((t) => {
         if (t === '\n') return '\n';
@@ -30,7 +32,6 @@ function lex(code) {
         if (number.test(t)) return { num: Number(t) };
         if (t.charAt(0) === "'") return { str: t.slice(1, -1) };
         if (t === 'ok' || t === 'no') return { bool: t === 'ok' };
-        if (key.test(t)) return { key: t };
         return { ref: t };
     });
 }
@@ -53,7 +54,7 @@ function parse(tok, head = true, end = false, tree = []) {
         if (')]}'.includes(t)) break;
         if ('([{'.includes(t))
             return parse(tok, false, end, tree.concat([parse(tok)]));
-        if (head || t.key) {
+        if (head || /^[!-@|~]/.test(t.ref)) {
             const branch = parse(tok, false, true, [t]);
             return parse(tok, true, end, tree.concat([branch]));
         }
@@ -65,23 +66,51 @@ function parse(tok, head = true, end = false, tree = []) {
 
 const lib = {
     '+': (...xs) => xs.reduce((a, b) => a + b),
-    '-': (...xs) => xs.reduce((a, b) => a - b, 0),
     '*': (...xs) => xs.reduce((a, b) => a * b),
-    '/': (...xs) => xs.reduce((a, b) => a / b),
     '%': (...xs) => xs.reduce((a, b) => a % b),
+    '-': (...xs) => (xs.length !== 1 ? xs.reduce((a, b) => a - b) : -xs[0]),
+    '/': (...xs) => (xs.length !== 1 ? xs.reduce((a, b) => a / b) : 1 / xs[0]),
+    ';': (x) => (console.log(x), x),
     '::': (...xs) => [...xs],
     '->': (x) => x,
 };
 
+const core = {
+    '.': ([_, ref, val], env) => {
+        const name = ref.ref;
+        if (!name) throw "Couldn't get reference for '.'";
+        env[env.length - 1][name] = interpret(val, env);
+    },
+    '~': () => {},
+    '?': ([, cond, then, alt], env) => {
+        const r = interpret(cond, env) ? then : alt;
+        return interpret(r, env);
+    },
+    '^': ([_, ...xs], env) => {
+        env.push({});
+        const r = interpret(xs, env);
+        env.pop();
+        return r;
+    },
+};
+
 function get(sym, env, i = env.length - 1) {
-    if (sym in env.i) return env.i.sym;
+    if (sym in env[i]) return env[i][sym];
     return i > 0 ? get(sym, env, i - 1) : null;
 }
 
-function compile() {
-    const traverse = (node) => {
-        if (node[0] === 'list') {
-            traverse(node.slice(1));
+function interpret(node, env = [lib]) {
+    if (Array.isArray(node)) {
+        if (!node.length) return null;
+        const head = node[0];
+        if (head.ref in core) return core[head.ref](node, env);
+        const list = node.map((x) => interpret(x, env));
+        if (list[0] instanceof Function) {
+            const [fn, ...args] = list;
+            return fn(...args);
         }
-    };
+        return list[list.length - 1];
+    }
+    if (node.ref) return get(node.ref, env);
+    return node[Object.keys(node)[0]];
 }

@@ -21,10 +21,12 @@ f 10
 `;
 
 let t3 = `
-. a (.) (
-    fib 10
+^ (
+    . two 2
+    + 1 - two * 3 / 4 5
+    ; two
 )
-g
+; two
 `;
 
-joc(t1, true);
+joc(t3, true);
