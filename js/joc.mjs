@@ -29,9 +29,9 @@ function lex(code) {
     return code.match(token).map((t) => {
         if (t === '\n') return '\n';
         if ('([{}])'.includes(t)) return t;
-        if (number.test(t)) return { num: Number(t) };
-        if (t.charAt(0) === "'") return { str: t.slice(1, -1) };
-        if (t === 'ok' || t === 'no') return { bool: t === 'ok' };
+        if (number.test(t)) return { lit: Number(t) };
+        if (t.charAt(0) === "'") return { lit: t.slice(1, -1) };
+        if (t === 'ok' || t === 'no') return { lit: t === 'ok' };
         return { ref: t };
     });
 }
@@ -116,5 +116,5 @@ function interpret(node, env = [lib]) {
         return list[list.length - 1];
     }
     if (node.ref) return get(node.ref, env);
-    return node[Object.keys(node)[0]];
+    return node.lit;
 }

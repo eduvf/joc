@@ -2,6 +2,7 @@ import joc from './joc.mjs';
 
 let t0 = `
 + 5 (5)
+hi 0
 `;
 
 let t1 = `
