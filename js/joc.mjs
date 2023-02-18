@@ -52,8 +52,11 @@ function parse(tok, head = true, end = false, tree = []) {
         const t = tok.shift();
         if (t === '\n') continue;
         if (')]}'.includes(t)) break;
-        if ('([{'.includes(t))
-            return parse(tok, false, end, tree.concat([parse(tok)]));
+        if ('([{'.includes(t)) {
+            let branch = [parse(tok)];
+            if (branch.length === 1) branch = branch[0];
+            return parse(tok, false, end, tree.concat(branch));
+        }
         if (head || /^[!-@|~]/.test(t.ref)) {
             const branch = parse(tok, false, true, [t]);
             return parse(tok, true, end, tree.concat([branch]));

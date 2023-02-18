@@ -31,4 +31,4 @@ let t3 = `
 ? (- 1 1) 'oops' (no) 'almost' 'yeah'
 `;
 
-joc(t3, true);
+joc(t2, true);
