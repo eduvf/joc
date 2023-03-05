@@ -1,7 +1,8 @@
-t0 = `
---(
-    comment
---)
+import joc from './joc.mjs';
+
+let t0 = `
+-- test
+1 == 1 ? "yes!" : "\\"oops\\""
 
 odd = n ~ (n == 0 ? no : even (n - 1))
 even = n ~ (n == 0 ? ok : odd (n - 1))
@@ -28,3 +29,5 @@ f = n ~
     acc
 )
 `;
+
+joc(t0, true);
