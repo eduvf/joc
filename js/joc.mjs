@@ -16,19 +16,42 @@ export default function joc(code, debug) {
         if (debug) console.dir(ast, { depth: null });
 
         const r = interpret(ast);
-        if (debug) console.log('--> ' + r);
+        if (debug) console.log('--> ' + format(r));
     } catch (error) {
         console.warn('[!] ' + error);
     }
 }
 
+function format(val, level = 0) {
+    switch (typeof val) {
+        case 'boolean':
+            return val ? '✓' : '✗';
+        case 'function':
+        case 'number':
+            return val.toString();
+        case 'object':
+            if (Array.isArray(val)) {
+                return (
+                    (level > 0 ? '\n' : '') +
+                    '  '.repeat(level) +
+                    `[ ${val.map((e) => format(e, level + 1)).join(' ')} ]`
+                );
+            }
+            return;
+        // TODO
+        case 'string':
+            return `'${val}'`;
+        default:
+            return '∅';
+    }
+}
+
 function lex(code) {
-    const token = /'(?:[\\].|[^\\'])*'|[(){}\[\]\n]|[^\s()]+/g;
-    const number = /^(-?\d*\.?\d+)|(0[xb][\dA-Fa-f]+)$/;
+    const token = /'(?:[\\].|[^\\'])*'|[(){}\[\]\n]|[^(){}\[\]\s]+/g;
+    const number = /^(-?\d*\.?\d+)|(0[xob][\dA-Fa-f]+)$/;
 
     return code.match(token).map((t) => {
-        if (t === '\n') return '\n';
-        if ('([{}])'.includes(t)) return t;
+        if ('\n([{}])'.includes(t)) return t;
         if (number.test(t)) return { lit: Number(t) };
         if (t.charAt(0) === "'") return { lit: t.slice(1, -1) };
         if (t === 'ok' || t === 'no') return { lit: t === 'ok' };
@@ -84,7 +107,7 @@ const core = {
         if (!name) throw "Couldn't get reference for '.'";
         env[env.length - 1][name] = interpret(val, env);
     },
-    '~': () => {},
+    '~': ([_, ...argsfn], env) => {},
     '?': ([_, ...ifthen], env) => {
         let r = null;
         while (ifthen.length)
@@ -118,6 +141,5 @@ function interpret(node, env = [lib]) {
         }
         return list[list.length - 1];
     }
-    if (node.ref) return get(node.ref, env);
-    return node.lit;
+    return node.ref ? get(node.ref, env) : node.lit;
 }

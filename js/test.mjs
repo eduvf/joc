@@ -19,6 +19,8 @@ f 10
 
 1 2 (-> 3 4
      -> 5 6)
+
+[1 2 3]
 `;
 
 let t3 = `
@@ -31,4 +33,4 @@ let t3 = `
 ? (- 1 1) 'oops' (no) 'almost' 'yeah'
 `;
 
-joc(t2, true);
+joc(t1, true);
